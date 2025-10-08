@@ -21,7 +21,10 @@ left_col, divider_col, right_col = st.columns([1, 0.02, 1])
 # LEFT SIDE → ENERGY INSIGHTS
 # ====================================================
 with left_col:
-    st.header(" Get energy saving tips by entering your location pincode")
+    st.markdown(
+    "<h2 style='font-size:26px; color:#1E90FF;'> Get energy saving tips by entering your location PIN code</h2>",
+    unsafe_allow_html=True
+)
 
     @st.cache_data
     def load_tips():
