@@ -163,17 +163,27 @@ Issue: {issue}
 Error Code: {display_error or 'Not provided'}
 
 Tasks:
-1. Identify the **appliance brand** and **type**.
-2. Then generate a short, structured diagnostic report with these 4 sections:
-   🔹 Quick Checks / Self-Diagnosis  
-   🔹 Customer Care Number  
-   🔹 Probable Causes & Estimated Costs  
-   🔹 Turnaround Time (TAT)
+1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
+2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
 
-Formatting:
-- No markdown symbols (#, *, etc.)
-- Use clean structured points with •
-- Keep response short and readable.
+   🔹 Quick Checks / Self-Diagnosis  
+   • Give 2–3 simple user-level checks to perform before calling a technician.
+
+   🔹 Customer Care Number  
+   • Give the official customer care helpline number for the brand.
+
+   🔹 Probable Causes & Estimated Costs  
+   • Mention 2–3 possible technical causes (just name them, no explanations).  
+   • Add approximate cost range in INR for each cause.
+
+   🔹 Turnaround Time (TAT)  
+   • Mention the realistic average service time in days.
+
+Formatting Instructions:
+- Use no markdown, *, or # symbols.
+- Each section heading should start with a blue diamond (🔹).
+- Each point inside should start with a small black dot (•).
+- Keep response short, clean, and visually structured.
 """
 
                 try:
