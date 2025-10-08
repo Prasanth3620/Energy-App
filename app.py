@@ -126,7 +126,7 @@ with right_col:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
     st.markdown(
-        "Having a problem with your appliance. Get the diagnostic tips by entering model number and the problem."
+        "Having a problem with your appliance? Get the diagnostic tips by entering model number and the problem."
     )
 
     with st.form("diagnostic_form"):
