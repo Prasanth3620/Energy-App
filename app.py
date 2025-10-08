@@ -13,7 +13,11 @@ st.set_page_config(
 )
 
 st.markdown(
-    "<h1 style='color:#1E90FF; text-align:center;'>⚡ Smart Home Energy & Appliance Assistant</h1>",
+    "<h1 style='color:#1E90FF; text-align:center;'>⚡Energy Vision</h1>",
+    unsafe_allow_html=True
+)
+st.markdown(
+    "<h3 style='color:#1E90FF; text-align:center;'>Your personal energy consultant</h1>",
     unsafe_allow_html=True
 )
 
@@ -26,7 +30,7 @@ left_col, divider_col, right_col = st.columns([1, 0.02, 1])
 # ====================================================
 with left_col:
     st.markdown(
-    "<h3 style='font-size:26px; color:green;'> Get energy saving tips by entering your location PIN code</h2>",
+    "<h3 style='font-size:26px; color:green;'> Today's energy saving tip,just enter your PIN code</h2>",
     unsafe_allow_html=True
 )
 
@@ -129,14 +133,14 @@ with divider_col:
 # ====================================================
 with right_col:
     st.markdown(
-    "<h3 style='font-size:26px; color:green;'> Appliance Diagnostic Assistant</h2>",
+    "<h3 style='font-size:26px; color:green;'> Facing problem with an appliance?</h2>",
     unsafe_allow_html=True
 )
 
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
     st.markdown(
-        "Having a problem with your appliance? Get the diagnostic tips by entering model number and the problem."
+        "Get the diagnostic tips by entering model number and the problem."
     )
 
     with st.form("diagnostic_form"):
