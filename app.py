@@ -12,20 +12,17 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title(" Smart Home Energy & Appliance Assistant")
+st.title("⚡ Smart Home Energy & Appliance Assistant")
 
-# Divide into two columns
-left_col, right_col = st.columns(2)
+# Create three columns: left app | divider | right app
+left_col, divider_col, right_col = st.columns([1, 0.02, 1])
 
 # ====================================================
-# LEFT SIDE → ENERGY INSIGHTS (Code 1)
+# LEFT SIDE → ENERGY INSIGHTS
 # ====================================================
 with left_col:
-    st.header(" Your Energy Your Way")
+    st.header("🌍 Your Energy Your Way")
 
-    # --------------------------
-    # Step 1: Load the tips sheet
-    # --------------------------
     @st.cache_data
     def load_tips():
         df = pd.read_excel("energy_tips_with_alert3.xlsx")
@@ -33,9 +30,6 @@ with left_col:
 
     df = load_tips()
 
-    # --------------------------
-    # Step 2: Fetch weather using PIN code
-    # --------------------------
     def fetch_weather_from_pincode(pincode: str):
         geo_url = "https://nominatim.openstreetmap.org/search"
         g = requests.get(
@@ -60,7 +54,6 @@ with left_col:
         lon = float(loc["lon"])
         display_name = loc.get("display_name", "Unknown Location")
 
-        # Fetch current weather
         wx_url = "https://api.open-meteo.com/v1/forecast"
         params = {
             "latitude": lat,
@@ -81,22 +74,15 @@ with left_col:
 
         return {"temp_c": temp, "humidity": hourly_humidity, "place": display_name}
 
-    # --------------------------
-    # Step 3: Match forecast with Excel ranges
-    # --------------------------
     def match_prompt(forecast, df):
         temp = forecast["temp_c"]
         hum = forecast["humidity"]
         if temp is None or hum is None:
             return None
-
         df_temp = df.copy()
         df_temp["distance"] = ((df_temp["Temperature (°C)"] - temp) ** 2 + (df_temp["Humidity (%)"] - hum) ** 2) ** 0.5
         return df_temp.loc[df_temp["distance"].idxmin()]
 
-    # --------------------------
-    # UI for Energy Section
-    # --------------------------
     pincode = st.text_input("Enter your area PIN code (e.g., 560001):")
 
     if st.button("Get Today’s Insights"):
@@ -106,12 +92,12 @@ with left_col:
             try:
                 forecast = fetch_weather_from_pincode(pincode)
                 st.subheader(f"Today's Forecast near {forecast['place']}")
-                st.write(f" Temperature: {forecast['temp_c']} °C")
-                st.write(f" Humidity: {forecast['humidity']} %")
+                st.write(f"🌡️ Temperature: {forecast['temp_c']} °C")
+                st.write(f"💧 Humidity: {forecast['humidity']} %")
 
                 row = match_prompt(forecast, df)
                 if row is not None:
-                    st.subheader(" Insights")
+                    st.subheader("⚡ Insights")
                     st.success(f"🔹 {row['Alert 1']}")
                     st.info(f"🔹 {row['Alert 2']}")
                     st.info(f"🔹 {row['Alert 3']}")
@@ -121,23 +107,28 @@ with left_col:
                 st.error(f"Error: {e}")
 
 # ====================================================
-# RIGHT SIDE → APPLIANCE DIAGNOSTIC (Code 2)
+# DIVIDER LINE (Vertical)
+# ====================================================
+with divider_col:
+    st.markdown(
+        """
+        <div style="border-left: 2px solid #d3d3d3; height: 100vh; margin-left: auto; margin-right: auto;"></div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# ====================================================
+# RIGHT SIDE → APPLIANCE DIAGNOSTIC
 # ====================================================
 with right_col:
-    st.header(" Appliance Diagnostic Assistant")
+    st.header("🔧 Appliance Diagnostic Assistant")
 
-    # -----------------------------
-    # Configure Gemini API Key
-    # -----------------------------
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
     st.markdown(
         "Get quick **self-diagnosis steps**, **probable causes**, **service timelines**, and **customer support info** for your home appliances."
     )
 
-    # -----------------------------
-    # Input Form
-    # -----------------------------
     with st.form("diagnostic_form"):
         model_name = st.text_input("Model Number", placeholder="e.g. Mi L32M6-RA, LG T70SPSF2Z, Samsung WA62M4100HY")
         col1, col2 = st.columns(2)
@@ -147,9 +138,6 @@ with right_col:
             display_error = st.text_input("Error Code / Message (Optional)", placeholder="e.g. E4, F07, etc.")
         submitted = st.form_submit_button("Diagnose Appliance", use_container_width=True)
 
-    # -----------------------------
-    # Gemini AI Response
-    # -----------------------------
     if submitted:
         if not model_name or not issue:
             st.warning("Please fill in the required fields before diagnosing.")
@@ -163,27 +151,16 @@ Issue: {issue}
 Error Code: {display_error or 'Not provided'}
 
 Tasks:
-1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
-2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
-
+1. Identify the appliance brand and type.
+2. Generate a concise, structured diagnostic report with:
    🔹 Quick Checks / Self-Diagnosis  
-   • Give 2–3 simple user-level checks to perform before calling a technician.
-
    🔹 Customer Care Number  
-   • Give the official customer care helpline number for the brand.
-
    🔹 Probable Causes & Estimated Costs  
-   • Mention 2–3 possible technical causes (just name them, no explanations).  
-   • Add approximate cost range in INR for each cause.
+   🔹 Turnaround Time (TAT)
 
-   🔹 Turnaround Time (TAT)  
-   • Mention the realistic average service time in days.
-
-Formatting Instructions:
-- Use no markdown, *, or # symbols.
-- Each section heading should start with a blue diamond (🔹).
-- Each point inside should start with a small black dot (•).
-- Keep response short, clean, and visually structured.
+Formatting:
+- No markdown symbols
+- Use bullet points (•) and blue diamond (🔹)
 """
 
                 try:
@@ -194,7 +171,6 @@ Formatting Instructions:
                     st.success("Diagnosis Report Generated Successfully!")
                     st.markdown("---")
 
-                    # Extract brand info
                     match_brand = re.search(r'(Brand|Appliance Type).*?:\s*(.*)', text, re.IGNORECASE)
                     if match_brand:
                         st.markdown(
@@ -214,7 +190,6 @@ Formatting Instructions:
                             unsafe_allow_html=True,
                         )
 
-                    # Split sections and style
                     sections = re.split(r'(?=🔹)', text)
                     colors = ["#1E90FF", "#4682B4", "#2E8B57", "#8B008B"]
 
