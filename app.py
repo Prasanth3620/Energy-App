@@ -163,10 +163,12 @@ Tasks:
    🔹 Probable Causes & Estimated Costs 
    • Mention 2–3 possible technical causes (just name them, no explanations).  
    • Add approximate cost range in INR for each cause.  
-   • Present this section **strictly as a clean 2-column table** —  
-     Column 1: “Probable Cause”  
-     Column 2: “Estimated Cost (INR Range)”.  
-   • Use simple spacing to make it look like a neat table.
+   • Present this section **strictly as a Markdown table with visible borders**, like this format:
+
+     | Probable Cause | Estimated Cost (INR Range) |
+     |----------------|----------------------------|
+     | Cause 1        | Cost Range 1               |
+     | Cause 2        | Cost Range 2               |
    
    🔹 Turnaround Time (TAT)  
    • Mention the realistic average service time in days.
