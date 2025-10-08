@@ -21,7 +21,7 @@ left_col, divider_col, right_col = st.columns([1, 0.02, 1])
 # LEFT SIDE → ENERGY INSIGHTS
 # ====================================================
 with left_col:
-    st.header("🌍 Your Energy Your Way")
+    st.header(" Your Energy Your Way")
 
     @st.cache_data
     def load_tips():
@@ -97,7 +97,7 @@ with left_col:
 
                 row = match_prompt(forecast, df)
                 if row is not None:
-                    st.subheader("⚡ Insights")
+                    st.subheader(" Insights")
                     st.success(f"🔹 {row['Alert 1']}")
                     st.info(f"🔹 {row['Alert 2']}")
                     st.info(f"🔹 {row['Alert 3']}")
@@ -121,7 +121,7 @@ with divider_col:
 # RIGHT SIDE → APPLIANCE DIAGNOSTIC
 # ====================================================
 with right_col:
-    st.header("🔧 Appliance Diagnostic Assistant")
+    st.header(" Appliance Diagnostic Assistant")
 
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
