@@ -1,0 +1,7 @@
+streamlit
+requests
+openpyxl
+pandas
+streamlit==1.39.0
+google-generativeai==0.8.3
+protobuf<5
