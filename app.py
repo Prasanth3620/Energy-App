@@ -128,7 +128,10 @@ with divider_col:
 # RIGHT SIDE → APPLIANCE DIAGNOSTIC
 # ====================================================
 with right_col:
-    st.header(" Appliance Diagnostic Assistant")
+    st.markdown(
+    "<h3 style='font-size:26px; color:green;'> Appliance Diagnostic Assistant</h2>",
+    unsafe_allow_html=True
+)
 
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
