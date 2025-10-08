@@ -12,7 +12,7 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("⚡ Smart Home Energy & Appliance Assistant")
+st.title(" Smart Home Energy & Appliance Assistant")
 
 # Divide into two columns
 left_col, right_col = st.columns(2)
@@ -21,7 +21,7 @@ left_col, right_col = st.columns(2)
 # LEFT SIDE → ENERGY INSIGHTS (Code 1)
 # ====================================================
 with left_col:
-    st.header("🌍 Your Energy Your Way")
+    st.header(" Your Energy Your Way")
 
     # --------------------------
     # Step 1: Load the tips sheet
@@ -106,12 +106,12 @@ with left_col:
             try:
                 forecast = fetch_weather_from_pincode(pincode)
                 st.subheader(f"Today's Forecast near {forecast['place']}")
-                st.write(f"🌡️ Temperature: {forecast['temp_c']} °C")
-                st.write(f"💧 Humidity: {forecast['humidity']} %")
+                st.write(f" Temperature: {forecast['temp_c']} °C")
+                st.write(f" Humidity: {forecast['humidity']} %")
 
                 row = match_prompt(forecast, df)
                 if row is not None:
-                    st.subheader("⚡ Insights")
+                    st.subheader(" Insights")
                     st.success(f"🔹 {row['Alert 1']}")
                     st.info(f"🔹 {row['Alert 2']}")
                     st.info(f"🔹 {row['Alert 3']}")
@@ -124,7 +124,7 @@ with left_col:
 # RIGHT SIDE → APPLIANCE DIAGNOSTIC (Code 2)
 # ====================================================
 with right_col:
-    st.header("🔧 Appliance Diagnostic Assistant")
+    st.header(" Appliance Diagnostic Assistant")
 
     # -----------------------------
     # Configure Gemini API Key
