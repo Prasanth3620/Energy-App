@@ -21,7 +21,7 @@ left_col, divider_col, right_col = st.columns([1, 0.02, 1])
 # LEFT SIDE → ENERGY INSIGHTS
 # ====================================================
 with left_col:
-    st.header(" Your Energy Your Way")
+    st.header(" Get energy saving tips by entering your location pincode")
 
     @st.cache_data
     def load_tips():
@@ -126,7 +126,7 @@ with right_col:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
     st.markdown(
-        "Get quick **self-diagnosis steps**, **probable causes**, **service timelines**, and **customer support info** for your home appliances."
+        "Having a problem with your appliance. Get the diagnostic tips by entering model number and the problem."
     )
 
     with st.form("diagnostic_form"):
