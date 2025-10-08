@@ -22,7 +22,7 @@ left_col, divider_col, right_col = st.columns([1, 0.02, 1])
 # ====================================================
 with left_col:
     st.markdown(
-    "<h2 style='font-size:26px; color:#1E90FF;'> Get energy saving tips by entering your location PIN code</h2>",
+    "<h3 style='font-size:26px; color:green;'> Get energy saving tips by entering your location PIN code</h2>",
     unsafe_allow_html=True
 )
 
