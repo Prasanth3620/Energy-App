@@ -160,9 +160,10 @@ Tasks:
    🔹 Customer Care Number  
    • Give the official customer care helpline number for the brand.
 
-   🔹 Probable Causes & Estimated Costs  
+   🔹 Probable Causes & Estimated Costs 
    • Mention 2–3 possible technical causes (just name them, no explanations).  
    • Add approximate cost range in INR for each cause.
+   • Display all this information in a table. In first column the probbale issue and in the next column it's estimated cost.
 
    🔹 Turnaround Time (TAT)  
    • Mention the realistic average service time in days.
