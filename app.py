@@ -12,7 +12,11 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("⚡ Smart Home Energy & Appliance Assistant")
+st.markdown(
+    "<h1 style='color:#1E90FF; text-align:center;'>⚡ Smart Home Energy & Appliance Assistant</h1>",
+    unsafe_allow_html=True
+)
+
 
 # Create three columns: left app | divider | right app
 left_col, divider_col, right_col = st.columns([1, 0.02, 1])
