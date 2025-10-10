@@ -206,8 +206,8 @@ with right_col:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
     with st.form("diagnostic_form"):
-        model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA, Samsung WA62M4100HY")
-        issue = st.text_area("Describe the Issue", placeholder="e.g. No display, not cooling, making noise...")
+        model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA ")
+        issue = st.text_area("Describe the Issue", placeholder="e.g. No display, making noise...")
         display_error = st.text_input("Error Code (Optional)", placeholder="e.g. E4, F07, etc.")
         submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
 
