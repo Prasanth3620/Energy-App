@@ -90,6 +90,11 @@ st.markdown(
     .stSuccess, .stInfo {
         border-radius: 10px !important;
     }
+    .header-space {
+    height: 100px;
+    background: linear-gradient(to bottom, rgba(0,226,255,0.05), rgba(0,0,0,0));
+    }
+
 
     </style>
     """,
@@ -101,6 +106,10 @@ st.markdown(
 # ================================================
 st.markdown("<h1 class='main-title'>⚡ Energy Vision</h1>", unsafe_allow_html=True)
 st.markdown("<h3 class='subtitle'>Your Personal Energy & Appliance Consultant</h3>", unsafe_allow_html=True)
+
+# Add extra vertical space below header
+st.markdown("<div class='header-space'></div>", unsafe_allow_html=True)
+
 
 # Create two sections side by side
 left_col, divider_col, right_col = st.columns([1, 0.05, 1])
