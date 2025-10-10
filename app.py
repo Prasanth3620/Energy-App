@@ -4,40 +4,116 @@ import pandas as pd
 import google.generativeai as genai
 import re
 
-# -----------------------------
+# ================================================
 # Streamlit Page Setup
-# -----------------------------
+# ================================================
 st.set_page_config(
-    page_title="Energy & Appliance Assistant",
+    page_title="⚡ Energy Vision",
     layout="wide",
 )
 
+# -----------------------------------------
+# Custom CSS for styling
+# -----------------------------------------
 st.markdown(
-    "<h1 style='color:#1E90FF; text-align:center;'>⚡Energy Vision</h1>",
-    unsafe_allow_html=True
-)
-st.markdown(
-    "<h3 style='color:#1E90FF; text-align:center;'>Your personal energy consultant</h1>",
+    """
+    <style>
+    /* General App Styling */
+    body {
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* Header */
+    .main-title {
+        color: #00E0FF;
+        text-align: center;
+        font-size: 3em;
+        font-weight: 700;
+        text-shadow: 1px 1px 10px rgba(0,255,255,0.3);
+        margin-bottom: 0.3rem;
+    }
+
+    .subtitle {
+        color: #A9B7C6;
+        text-align: center;
+        font-size: 1.3em;
+        margin-bottom: 3rem;
+    }
+
+    /* Section Headers */
+    .section-header {
+        color: #00C896;
+        font-size: 1.6em;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    /* Info Cards */
+    .info-card {
+        background: linear-gradient(135deg, #1B1F2A, #10131A);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+
+    /* Divider Line */
+    .divider {
+        border-left: 2px solid rgba(255,255,255,0.2);
+        height: 100%;
+        margin: auto;
+        animation: fadeIn 1.5s ease-in-out;
+    }
+
+    /* Animated subtle glow */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scaleY(0.8); }
+        to { opacity: 1; transform: scaleY(1); }
+    }
+
+    /* Buttons */
+    div.stButton > button {
+        background-color: #00C2A8 !important;
+        color: white !important;
+        border: none;
+        border-radius: 10px;
+        padding: 0.6rem 1.2rem;
+        font-weight: 600;
+        transition: all 0.2s ease-in-out;
+    }
+    div.stButton > button:hover {
+        background-color: #00E0FF !important;
+        transform: scale(1.02);
+    }
+
+    /* Success & Info Blocks */
+    .stSuccess, .stInfo {
+        border-radius: 10px !important;
+    }
+
+    </style>
+    """,
     unsafe_allow_html=True
 )
 
+# ================================================
+# HEADER
+# ================================================
+st.markdown("<h1 class='main-title'>⚡ Energy Vision</h1>", unsafe_allow_html=True)
+st.markdown("<h3 class='subtitle'>Your Personal Energy & Appliance Consultant</h3>", unsafe_allow_html=True)
 
-# Create three columns: left app | divider | right app
-left_col, divider_col, right_col = st.columns([1, 0.02, 1])
+# Create two sections side by side
+left_col, divider_col, right_col = st.columns([1, 0.05, 1])
 
 # ====================================================
 # LEFT SIDE → ENERGY INSIGHTS
 # ====================================================
 with left_col:
-    st.markdown(
-    "<h3 style='font-size:26px; color:green;'> Today's energy saving tip,just enter your PIN code</h2>",
-    unsafe_allow_html=True
-)
+    st.markdown("<h3 class='section-header'>🌞 Today's Energy Saving Tip</h3>", unsafe_allow_html=True)
 
     @st.cache_data
     def load_tips():
-        df = pd.read_excel("energy_tips_with_alert3.xlsx")
-        return df
+        return pd.read_excel("energy_tips_with_alert3.xlsx")
 
     df = load_tips()
 
@@ -56,142 +132,92 @@ with left_col:
         )
         g.raise_for_status()
         gdata = g.json()
-
         if not gdata:
             raise ValueError(f"No location found for PIN code {pincode}")
-
         loc = gdata[0]
-        lat = float(loc["lat"])
-        lon = float(loc["lon"])
+        lat, lon = float(loc["lat"]), float(loc["lon"])
         display_name = loc.get("display_name", "Unknown Location")
 
         wx_url = "https://api.open-meteo.com/v1/forecast"
-        params = {
+        r = requests.get(wx_url, params={
             "latitude": lat,
             "longitude": lon,
             "current_weather": True,
             "hourly": "temperature_2m,relative_humidity_2m"
-        }
-        r = requests.get(wx_url, params=params, timeout=10)
+        }, timeout=10)
         r.raise_for_status()
         data = r.json()
-
-        current = data.get("current_weather", {})
-        temp = current.get("temperature")
-
-        hourly_humidity = None
+        temp = data.get("current_weather", {}).get("temperature")
+        humidity = None
         if "hourly" in data and "relative_humidity_2m" in data["hourly"]:
-            hourly_humidity = data["hourly"]["relative_humidity_2m"][0]
-
-        return {"temp_c": temp, "humidity": hourly_humidity, "place": display_name}
+            humidity = data["hourly"]["relative_humidity_2m"][0]
+        return {"temp_c": temp, "humidity": humidity, "place": display_name}
 
     def match_prompt(forecast, df):
-        temp = forecast["temp_c"]
-        hum = forecast["humidity"]
+        temp, hum = forecast["temp_c"], forecast["humidity"]
         if temp is None or hum is None:
             return None
         df_temp = df.copy()
-        df_temp["distance"] = ((df_temp["Temperature (°C)"] - temp) ** 2 + (df_temp["Humidity (%)"] - hum) ** 2) ** 0.5
+        df_temp["distance"] = ((df_temp["Temperature (°C)"] - temp)**2 + (df_temp["Humidity (%)"] - hum)**2) ** 0.5
         return df_temp.loc[df_temp["distance"].idxmin()]
 
-    pincode = st.text_input("Enter your area PIN code (e.g., 560001):")
-
-    if st.button("Get Today’s Insights"):
-        if not pincode:
-            st.error("Please enter a valid PIN code.")
-        else:
-            try:
-                forecast = fetch_weather_from_pincode(pincode)
-                st.subheader(f"Today's Forecast near {forecast['place']}")
-                st.write(f"🌡️ Temperature: {forecast['temp_c']} °C")
-                st.write(f"💧 Humidity: {forecast['humidity']} %")
-
-                row = match_prompt(forecast, df)
-                if row is not None:
-                    st.subheader(" Insights")
-                    st.success(f"🔹 {row['Alert 1']}")
-                    st.info(f"🔹 {row['Alert 2']}")
-                    st.info(f"🔹 {row['Alert 3']}")
-                else:
-                    st.warning("No exact match found in the tips sheet.")
-            except Exception as e:
-                st.error(f"Error: {e}")
+    with st.container():
+        pincode = st.text_input("Enter your PIN Code", placeholder="e.g. 560001")
+        if st.button("🔍 Get Today's Insights", use_container_width=True):
+            if not pincode:
+                st.error("Please enter a valid PIN code.")
+            else:
+                try:
+                    forecast = fetch_weather_from_pincode(pincode)
+                    st.markdown(f"<div class='info-card'><b>📍 Location:</b> {forecast['place']}<br>🌡️ <b>Temperature:</b> {forecast['temp_c']}°C<br>💧 <b>Humidity:</b> {forecast['humidity']}%</div>", unsafe_allow_html=True)
+                    row = match_prompt(forecast, df)
+                    if row is not None:
+                        st.markdown("<div class='info-card'><b>💡 Energy Tips:</b></div>", unsafe_allow_html=True)
+                        st.success(f"🔹 {row['Alert 1']}")
+                        st.info(f"🔹 {row['Alert 2']}")
+                        st.info(f"🔹 {row['Alert 3']}")
+                    else:
+                        st.warning("No matching condition found in the tips sheet.")
+                except Exception as e:
+                    st.error(f"Error: {e}")
 
 # ====================================================
-# DIVIDER LINE (Vertical)
+# DIVIDER
 # ====================================================
 with divider_col:
-    st.markdown(
-        """
-        <div style="border-left: 2px solid #d3d3d3; height: 100vh; margin-left: auto; margin-right: auto;"></div>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 # ====================================================
 # RIGHT SIDE → APPLIANCE DIAGNOSTIC
 # ====================================================
 with right_col:
-    st.markdown(
-    "<h3 style='font-size:26px; color:green;'> Facing problem with an appliance?</h2>",
-    unsafe_allow_html=True
-)
+    st.markdown("<h3 class='section-header'>🔧 Appliance Diagnostic Assistant</h3>", unsafe_allow_html=True)
+    st.markdown("Describe the issue to get quick troubleshooting guidance.")
 
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
-    st.markdown(
-        "Get the diagnostic tips by entering model number and the problem."
-    )
-
     with st.form("diagnostic_form"):
-        model_name = st.text_input("Model Number", placeholder="e.g. Mi L32M6-RA, LG T70SPSF2Z, Samsung WA62M4100HY")
-        col1, col2 = st.columns(2)
-        with col1:
-            issue = st.text_area("Describe the Issue", placeholder="e.g. No display, Not cooling, making noise...")
-        with col2:
-            display_error = st.text_input("Error Code / Message (Optional)", placeholder="e.g. E4, F07, etc.")
-        submitted = st.form_submit_button("Diagnose Appliance", use_container_width=True)
+        model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA, Samsung WA62M4100HY")
+        issue = st.text_area("Describe the Issue", placeholder="e.g. No display, not cooling, making noise...")
+        display_error = st.text_input("Error Code (Optional)", placeholder="e.g. E4, F07, etc.")
+        submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
 
     if submitted:
         if not model_name or not issue:
-            st.warning("Please fill in the required fields before diagnosing.")
+            st.warning("Please fill in the required fields.")
         else:
-            with st.spinner("Analyzing the issue... Please wait "):
+            with st.spinner("Analyzing the issue..."):
                 prompt = f"""
-You are an intelligent appliance service diagnostic assistant.
-
+You are an intelligent appliance diagnostic assistant.
 Model Number: {model_name}
 Issue: {issue}
 Error Code: {display_error or 'Not provided'}
 
-Tasks:
-1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
-2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
-
-   🔹 Quick Checks / Self-Diagnosis  
-   • Give 2–3 simple user-level checks to perform before calling a technician.
-
-   🔹 Customer Care Number  
-   • Give the official customer care helpline number for the brand.
-
-   🔹 Probable Causes & Estimated Costs 
-   • Mention 2–3 possible technical causes (just name them, no explanations).  
-   • Add approximate cost range in INR for each cause.  
-   • Present this section **strictly as a Markdown table with visible borders**, like this format:
-
-     | Probable Cause | Estimated Cost (INR Range) |
-     |----------------|----------------------------|
-     | Cause 1        | Cost Range 1               |
-     | Cause 2        | Cost Range 2               |
-   
-   🔹 Turnaround Time (TAT)  
-   • Mention the realistic average service time in days.
-
-Formatting Instructions:
-- Use no markdown, *, or # symbols.
-- Each section heading should start with a blue diamond (🔹).
-- Each point inside should start with a small black dot (•).
-- Keep response short, clean, and visually structured.
+Generate a diagnostic report with:
+🔹 Quick Checks / Self-Diagnosis (2-3 bullet points)
+🔹 Customer Care Number
+🔹 Probable Causes & Estimated Costs (Markdown table)
+🔹 Turnaround Time (TAT)
 """
 
                 try:
@@ -199,30 +225,9 @@ Formatting Instructions:
                     response = model.generate_content(prompt)
                     text = response.text
 
-                    st.success("Diagnosis Report Generated Successfully!")
-                    st.markdown("---")
-
-                    match_brand = re.search(r'(Brand|Appliance Type).*?:\s*(.*)', text, re.IGNORECASE)
-                    if match_brand:
-                        st.markdown(
-                            f"""
-                            <div style='
-                                background-color:#003366;
-                                color:#FFFFFF;
-                                padding:1rem;
-                                border-radius:10px;
-                                font-family:Arial;
-                                margin-bottom:1rem;
-                            '>
-                            <h3>Brand & Appliance</h3>
-                            <b>{match_brand.group(2).strip()}</b>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-
+                    st.markdown("<div class='info-card'><h4>✅ Diagnosis Report</h4></div>", unsafe_allow_html=True)
                     sections = re.split(r'(?=🔹)', text)
-                    colors = ["#1E90FF", "#4682B4", "#2E8B57", "#8B008B"]
+                    colors = ["#007ACC", "#008CBA", "#006C77", "#005577"]
 
                     for i, sec in enumerate(sections):
                         sec = sec.strip()
@@ -234,17 +239,15 @@ Formatting Instructions:
                                 <div style="
                                     background-color:{colors[i % len(colors)]};
                                     color:#FFFFFF;
-                                    padding:1rem;
+                                    padding:1.2rem;
                                     border-radius:12px;
                                     margin-bottom:1rem;
-                                    font-family:Arial, sans-serif;
-                                    line-height:1.6;
+                                    box-shadow: 0 0 15px rgba(0,0,0,0.3);
                                 ">
                                 {sec_html}
                                 </div>
                                 """,
                                 unsafe_allow_html=True,
                             )
-
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
