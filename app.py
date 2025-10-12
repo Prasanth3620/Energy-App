@@ -71,9 +71,9 @@ st.markdown(
         to { opacity: 1; transform: scaleY(1); }
     }
 
-    /* Buttons */
+    /* Buttons (including Diagnose button) */
     div.stButton > button {
-        background-color: #00C2A8 !important;
+        background-color: #00C2A8 !important;  /* same as 'Get Today's Insights' */
         color: white !important;
         border: none;
         border-radius: 10px;
