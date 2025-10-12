@@ -12,6 +12,79 @@ st.set_page_config(
     layout="wide",
 )
 
+# -----------------------------
+# CSS Styling Section
+# -----------------------------
+st.markdown("""
+    <style>
+    /* ---------------- Page Base ---------------- */
+    body, .stApp {
+        background: radial-gradient(circle at top left, #0f2027, #203a43, #2c5364);
+        color: white;
+    }
+
+    /* ---------------- Title Styling ---------------- */
+    h1 {
+        text-align: center;
+        font-size: 48px !important;
+        background: linear-gradient(90deg, #00e6ff, #ff00ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0px;
+    }
+    h2 {
+        text-align: center;
+        font-size: 24px !important;
+        color: #a0f0ff;
+        margin-top: -5px;
+        margin-bottom: 40px;
+    }
+
+    /* ---------------- Button Styling ---------------- */
+    div.stButton > button {
+        background: linear-gradient(90deg, #00ffff, #0077ff);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.6em 1.2em;
+        font-size: 16px;
+        transition: 0.3s ease-in-out;
+    }
+    div.stButton > button:hover {
+        transform: scale(1.05);
+        background: linear-gradient(90deg, #0077ff, #00ffff);
+        box-shadow: 0 0 15px #00ffff;
+    }
+
+    /* ---------------- Card (App Containers) ---------------- */
+    .app-card {
+        background: linear-gradient(145deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 255, 0.2));
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
+        transition: 0.4s ease-in-out;
+    }
+    .app-card:hover {
+        box-shadow: 0 0 45px rgba(0, 255, 255, 0.6);
+        transform: translateY(-5px);
+    }
+
+    /* ---------------- Streamlit Layout Tweaks ---------------- */
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 2rem;
+    }
+
+    /* ---------------- Metric Box ---------------- */
+    div[data-testid="stMetricValue"] {
+        color: #00ffff;
+        font-weight: bold;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+
+
 # -----------------------------------------
 # Custom CSS for Premium Aesthetic Styling
 # -----------------------------------------
