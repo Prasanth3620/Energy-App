@@ -73,7 +73,7 @@ st.markdown(
 
     /* Buttons - unified color for both sides */
     div.stButton > button {
-        background-color: #00C2A8 !important;  /* Teal color */
+        background-color: #00C2A8 !important;
         color: white !important;
         border: none;
         border-radius: 10px;
@@ -82,7 +82,7 @@ st.markdown(
         transition: all 0.2s ease-in-out;
     }
     div.stButton > button:hover {
-        background-color: #00E0FF !important;  /* Light neon hover */
+        background-color: #00E0FF !important;
         transform: scale(1.03);
         box-shadow: 0 0 10px rgba(0,224,255,0.5);
     }
@@ -256,30 +256,36 @@ Formatting Instructions:
                     response = model.generate_content(prompt)
                     text = response.text
 
-                    st.markdown("<div class='info-card'><h4 style='color:#00C2A8;'>✅ Diagnosis Report</h4></div>",unsafe_allow_html=True)
+                    # Diagnosis Report Button (Styled)
+                    st.markdown("---")
+                    st.markdown("<div style='text-align:center;'>", unsafe_allow_html=True)
+                    if st.button("✅ Diagnosis Report", use_container_width=True):
+                        st.markdown("<div class='info-card'><b style='color:#00C2A8;'>📋 Generated Diagnostic Report</b></div>", unsafe_allow_html=True)
 
-                    sections = re.split(r'(?=🔹)', text)
-                    colors = ["#007ACC", "#008CBA", "#006C77", "#005577"]
+                        sections = re.split(r'(?=🔹)', text)
+                        colors = ["#007ACC", "#008CBA", "#006C77", "#005577"]
 
-                    for i, sec in enumerate(sections):
-                        sec = sec.strip()
-                        if sec:
-                            sec_html = re.sub(r'^\s*[-*]\s+', '• ', sec, flags=re.MULTILINE)
-                            sec_html = sec_html.replace('\n', '<br>')
-                            st.markdown(
-                                f"""
-                                <div style="
-                                    background-color:{colors[i % len(colors)]};
-                                    color:#FFFFFF;
-                                    padding:1.2rem;
-                                    border-radius:12px;
-                                    margin-bottom:1rem;
-                                    box-shadow: 0 0 15px rgba(0,0,0,0.3);
-                                ">
-                                {sec_html}
-                                </div>
-                                """,
-                                unsafe_allow_html=True,
-                            )
+                        for i, sec in enumerate(sections):
+                            sec = sec.strip()
+                            if sec:
+                                sec_html = re.sub(r'^\s*[-*]\s+', '• ', sec, flags=re.MULTILINE)
+                                sec_html = sec_html.replace('\n', '<br>')
+                                st.markdown(
+                                    f"""
+                                    <div style="
+                                        background-color:{colors[i % len(colors)]};
+                                        color:#FFFFFF;
+                                        padding:1.2rem;
+                                        border-radius:12px;
+                                        margin-bottom:1rem;
+                                        box-shadow: 0 0 15px rgba(0,0,0,0.3);
+                                    ">
+                                    {sec_html}
+                                    </div>
+                                    """,
+                                    unsafe_allow_html=True,
+                                )
+                    st.markdown("</div>", unsafe_allow_html=True)
+
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
