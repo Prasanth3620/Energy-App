@@ -71,7 +71,7 @@ st.markdown(
         to { opacity: 1; transform: scaleY(1); }
     }
 
-    /* Buttons - unified color for both sides */
+    /* Buttons */
     div.stButton > button {
         background-color: #00C2A8 !important;
         color: white !important;
@@ -83,19 +83,19 @@ st.markdown(
     }
     div.stButton > button:hover {
         background-color: #00E0FF !important;
-        transform: scale(1.03);
-        box-shadow: 0 0 10px rgba(0,224,255,0.5);
+        transform: scale(1.02);
     }
 
     /* Success & Info Blocks */
     .stSuccess, .stInfo {
         border-radius: 10px !important;
     }
-
     .header-space {
-        height: 100px;
-        background: linear-gradient(to bottom, rgba(0,226,255,0.05), rgba(0,0,0,0));
+    height: 100px;
+    background: linear-gradient(to bottom, rgba(0,226,255,0.05), rgba(0,0,0,0));
     }
+
+
     </style>
     """,
     unsafe_allow_html=True
@@ -222,33 +222,11 @@ Model Number: {model_name}
 Issue: {issue}
 Error Code: {display_error or 'Not provided'}
 
-Tasks:
-1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
-2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
-
-   🔹 Quick Checks / Self-Diagnosis  
-   • Give 2–3 simple user-level checks to perform before calling a technician.
-
-   🔹 Customer Care Number  
-   • Give the official customer care helpline number for the brand.
-
-   🔹 Probable Causes & Estimated Costs  
-   • Mention 2–3 possible technical causes (just name them, no explanations).  
-   • Add approximate cost range in INR for each cause.  
-   • Present this section **strictly as a clean 2-column table** —  
-     Column 1: “Probable Cause”  
-     Column 2: “Estimated Cost (INR Range)”.  
-   • Do not include markdown symbols like |, *, or #.  
-   • Use simple spacing to make it look like a neat table.
-
-   🔹 Turnaround Time (TAT)  
-   • Mention the realistic average service time in days.
-
-Formatting Instructions:
-- Each section heading should start with a blue diamond (🔹).
-- Each point should start with a small black dot (•) except inside the table.
-- Keep response short, well-structured, and visually clean.
-- Avoid unnecessary text or explanations.
+Generate a diagnostic report with:
+🔹 Quick Checks / Self-Diagnosis (2-3 bullet points)
+🔹 Customer Care Number
+🔹 Probable Causes & Estimated Costs (Markdown table)
+🔹 Turnaround Time (TAT)
 """
 
                 try:
@@ -256,36 +234,29 @@ Formatting Instructions:
                     response = model.generate_content(prompt)
                     text = response.text
 
-                    # Diagnosis Report Button (Styled)
-                    st.markdown("---")
-                    st.markdown("<div style='text-align:center;'>", unsafe_allow_html=True)
-                    if st.button("✅ Diagnosis Report", use_container_width=True):
-                        st.markdown("<div class='info-card'><b style='color:#00C2A8;'>📋 Generated Diagnostic Report</b></div>", unsafe_allow_html=True)
+                    st.markdown("<div class='info-card'><h4>✅ Diagnosis Report</h4></div>", unsafe_allow_html=True)
+                    sections = re.split(r'(?=🔹)', text)
+                    colors = ["#007ACC", "#008CBA", "#006C77", "#005577"]
 
-                        sections = re.split(r'(?=🔹)', text)
-                        colors = ["#007ACC", "#008CBA", "#006C77", "#005577"]
-
-                        for i, sec in enumerate(sections):
-                            sec = sec.strip()
-                            if sec:
-                                sec_html = re.sub(r'^\s*[-*]\s+', '• ', sec, flags=re.MULTILINE)
-                                sec_html = sec_html.replace('\n', '<br>')
-                                st.markdown(
-                                    f"""
-                                    <div style="
-                                        background-color:{colors[i % len(colors)]};
-                                        color:#FFFFFF;
-                                        padding:1.2rem;
-                                        border-radius:12px;
-                                        margin-bottom:1rem;
-                                        box-shadow: 0 0 15px rgba(0,0,0,0.3);
-                                    ">
-                                    {sec_html}
-                                    </div>
-                                    """,
-                                    unsafe_allow_html=True,
-                                )
-                    st.markdown("</div>", unsafe_allow_html=True)
-
+                    for i, sec in enumerate(sections):
+                        sec = sec.strip()
+                        if sec:
+                            sec_html = re.sub(r'^\s*[-*]\s+', '• ', sec, flags=re.MULTILINE)
+                            sec_html = sec_html.replace('\n', '<br>')
+                            st.markdown(
+                                f"""
+                                <div style="
+                                    background-color:{colors[i % len(colors)]};
+                                    color:#FFFFFF;
+                                    padding:1.2rem;
+                                    border-radius:12px;
+                                    margin-bottom:1rem;
+                                    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+                                ">
+                                {sec_html}
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
