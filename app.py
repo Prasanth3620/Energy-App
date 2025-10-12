@@ -256,7 +256,8 @@ Formatting Instructions:
                     response = model.generate_content(prompt)
                     text = response.text
 
-                    st.markdown("<div class='info-card'><h4>✅ Diagnosis Report</h4></div>", unsafe_allow_html=True)
+                    st.markdown("<div class='info-card'><h4 style='color:#00C2A8;'>✅ Diagnosis Report</h4></div>",unsafe_allow_html=True)
+
                     sections = re.split(r'(?=🔹)', text)
                     colors = ["#007ACC", "#008CBA", "#006C77", "#005577"]
 
