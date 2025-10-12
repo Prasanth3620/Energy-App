@@ -71,9 +71,9 @@ st.markdown(
         to { opacity: 1; transform: scaleY(1); }
     }
 
-    /* Buttons */
+    /* Buttons - unified color for both sides */
     div.stButton > button {
-        background-color: #00C2A8 !important;
+        background-color: #00C2A8 !important;  /* Teal color */
         color: white !important;
         border: none;
         border-radius: 10px;
@@ -82,20 +82,20 @@ st.markdown(
         transition: all 0.2s ease-in-out;
     }
     div.stButton > button:hover {
-        background-color: #00E0FF !important;
-        transform: scale(1.02);
+        background-color: #00E0FF !important;  /* Light neon hover */
+        transform: scale(1.03);
+        box-shadow: 0 0 10px rgba(0,224,255,0.5);
     }
 
     /* Success & Info Blocks */
     .stSuccess, .stInfo {
         border-radius: 10px !important;
     }
+
     .header-space {
-    height: 100px;
-    background: linear-gradient(to bottom, rgba(0,226,255,0.05), rgba(0,0,0,0));
+        height: 100px;
+        background: linear-gradient(to bottom, rgba(0,226,255,0.05), rgba(0,0,0,0));
     }
-
-
     </style>
     """,
     unsafe_allow_html=True
