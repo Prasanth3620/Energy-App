@@ -221,11 +221,28 @@ Model Number: {model_name}
 Issue: {issue}
 Error Code: {display_error or 'Not provided'}
 
-Generate a diagnostic report with:
-🔹 Quick Checks / Self-Diagnosis (2-3 bullet points)
-🔹 Customer Care Number
-🔹 Probable Causes & Estimated Costs (Markdown table)
-🔹 Turnaround Time (TAT)
+Tasks:
+ 1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
+ 2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
+ 
+ 🔹 Quick Checks / Self-Diagnosis 
+ • Give 2–3 simple user-level checks to perform before calling a technician.
+ 
+ 🔹 Customer Care Number 
+ • Give the official customer care helpline number for the brand.
+ 
+ 🔹 Probable Causes & Estimated Costs 
+ • Mention 2–3 possible technical causes (just name them, no explanations). 
+ • Add approximate cost range in INR for each cause. 
+ • Present this section **strictly as a Markdown table with visible borders**, like this format:
+ 
+ | Probable Cause | Estimated Cost (INR Range) |
+ |----------------|----------------------------|
+ | Cause 1 | Cost Range 1 |
+ | Cause 2 | Cost Range 2 |
+ 
+ 🔹 Turnaround Time (TAT) 
+ • Mention the realistic average service time in days.
 """
                 try:
                     model = genai.GenerativeModel("gemini-2.5-flash-lite")
