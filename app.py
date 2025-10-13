@@ -187,12 +187,12 @@ with left_col:
         return df_temp.loc[df_temp["distance"].idxmin()]
  
     with st.container():
-    col1, col2 = st.columns([0.5, 0.5])  # half-width layout
-    with col1:
+     col1, col2 = st.columns([0.5, 0.5])  # half-width layout
+     with col1:
         pincode = st.text_input("Enter your PIN Code", placeholder="e.g. 560001")
-    # Optional: leave col2 empty for spacing
+     # Optional: leave col2 empty for spacing
 
-    if st.button("🔍 Get Today's Insights", use_container_width=True):
+     if st.button("🔍 Get Today's Insights", use_container_width=True):
         if not pincode:
             st.error("Please enter a valid PIN code.")
         else:
