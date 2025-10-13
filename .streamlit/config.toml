@@ -1,8 +1,9 @@
 [theme]
 base="light"
-primaryColor="#007AFF"
-backgroundColor="#F8FBFF"
-secondaryBackgroundColor="#FFFFFF"
-textColor="#1A1A1A"
+primaryColor="#006DFF"               # Deeper blue accent (vs #007AFF)
+backgroundColor="#E9F1FA"            # Softer blue-gray background
+secondaryBackgroundColor="#F3F6FB"   # Light grayish white for cards
+textColor="#0F1C2E"                  # Dark navy-gray for better contrast
 font="sans serif"
+
 
