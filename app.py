@@ -17,108 +17,64 @@ st.set_page_config(
 # -----------------------------------------
 st.markdown("""
 <style>
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        background: linear-gradient(to bottom, #D6E1F0, #C5D4E7);
-        color: #0D1B2A;
+    /* ================= Input & Textarea Adjustments ================= */
+    .stTextInput > div > div > input,
+    textarea {
+        background: #FFFFFF !important;
+        border: 1px solid rgba(0,95,230,0.3) !important;
+        border-radius: 10px !important;
+        color: #0D1B2A !important;
+        padding: 0.3rem 0.5rem !important;  /* smaller padding */
+        font-size: 0.8rem !important;       /* smaller font */
     }
 
-    .main-title {
-        color: #005FE6;
-        text-align: center;
-        font-size: 3em;
-        font-weight: 700;
-        text-shadow: 0 1px 10px rgba(0, 95, 230, 0.25);
-        margin-bottom: 0.3rem;
-    }
-
-    .subtitle {
-        color: #3F4E61;
-        text-align: center;
-        font-size: 1.3em;
-        margin-bottom: 2.5rem;
-    }
-
-    .section-header {
-        color: #005FE6;
-        font-size: 1.6em;
-        font-weight: 600;
-        margin-bottom: 1rem;
-    }
-
-    .info-card {
-        background: linear-gradient(145deg, #C9D8EE, #B8C9E5);
-        border-radius: 18px;
-        padding: 1.2rem;
-        margin-bottom: 1.2rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.18);
-        border: 1px solid rgba(0, 95, 230, 0.2);
-        color: #0A1832;
-    }
-
-    .divider {
-        border-left: 2px solid rgba(0, 0, 0, 0.1);
-        height: 100%;
-        margin: auto;
-    }
-
+    /* ================= Button Adjustments ================= */
     div.stButton > button {
         background: linear-gradient(135deg, #005FE6, #007FFF) !important;
         color: white !important;
         border: none;
         border-radius: 10px;
-        padding: 0.4rem 0.8rem !important;
-        font-weight: 600;
-        font-size: 0.85rem !important;
-        width: 50% !important;
-        box-shadow: 0 3px 10px rgba(0, 95, 230, 0.4);
+        padding: 0.3rem 0.6rem !important;   /* half size */
+        font-weight: 500;
+        font-size: 0.8rem !important;        /* smaller font */
+        box-shadow: 0 2px 6px rgba(0, 95, 230, 0.3);
         transition: all 0.2s ease-in-out;
     }
 
     div.stButton > button:hover {
         background: linear-gradient(135deg, #007FFF, #33A0FF) !important;
-        transform: scale(1.03);
-        box-shadow: 0 5px 14px rgba(0, 95, 230, 0.45);
+        transform: scale(1.02);
+        box-shadow: 0 3px 8px rgba(0, 95, 230, 0.35);
     }
 
+    /* ================= Output Info Card Adjustments ================= */
+    .info-card {
+        background: linear-gradient(135deg, #FFFFFF, #D8E1F2);  /* brighter and more visible */
+        border-radius: 18px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);   /* slightly darker shadow */
+        border: 1px solid rgba(0, 95, 230, 0.25);
+        color: #0D1B2A;
+    }
+
+    /* ================= Diagnostic Output Blocks ================= */
+    .diagnostic-output {
+        background-color: #007ACC !important;  /* darker blue for better contrast */
+        color: #FFFFFF !important;
+        padding: 1rem !important;
+        border-radius: 12px !important;
+        margin-bottom: 1rem !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    /* Optional: adjust success/info/warning boxes for better contrast */
     .stSuccess, .stInfo, .stWarning {
         border-radius: 12px !important;
-        padding: 0.8rem !important;
-        background-color: #C9D8EE !important;
-        color: #0A1832 !important;
-        border: 1px solid rgba(0, 95, 230, 0.15) !important;
-    }
-
-    div[data-testid="stMarkdownContainer"] > div[style*="background-color"] {
-        border-radius: 16px !important;
-        background: linear-gradient(145deg, #C9D8EE, #B8C9E5) !important;
-        color: #0A1832 !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-    }
-
-    .header-space {
-        height: 80px;
-        background: linear-gradient(to bottom, rgba(0,95,230,0.1), rgba(255,255,255,0));
-    }
-
-    .stTextInput > div > div > input, textarea {
-        background: #FFFFFF !important;
-        border: 1px solid rgba(0,95,230,0.3) !important;
-        border-radius: 8px !important;
-        color: #0D1B2A !important;
-        padding: 0.3rem 0.5rem !important;
-        font-size: 0.85rem !important;
-        width: 50% !important;
-    }
-
-    label {
+        padding: 0.6rem !important;
+        background-color: #FFFFFF !important;
         color: #003366 !important;
-        font-weight: 500 !important;
-        font-size: 0.9rem !important;
-    }
-
-    .stApp {
-        background: linear-gradient(to bottom, #D6E1F0, #C5D4E7);
+        border: 1px solid rgba(0, 95, 230, 0.25) !important;
     }
 </style>
 """, unsafe_allow_html=True)
