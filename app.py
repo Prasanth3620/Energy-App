@@ -3,221 +3,139 @@ import requests
 import pandas as pd
 import google.generativeai as genai
 import re
-
+ 
 # ================================================
 # Streamlit Page Setup
 # ================================================
 st.set_page_config(
-    page_title="Device Details",
-    layout="centered"
+    page_title="⚡ Energy Vision",
+    layout="wide",
 )
-
-# ================================================
-# Custom CSS for Google-Nest-Like Look
-# ================================================
-st.markdown("""
-    <style>
-    /* -----------------------------
-       GENERAL APP BACKGROUND
-    ------------------------------ */
-    html, body, [class*="stAppViewContainer"], [class*="main"] {
-        background: linear-gradient(to bottom, #ffffff 0%, #dbe9f9 100%) !important;
-        color: #333333;
-        font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+ 
+# -----------------------------------------
+# Custom CSS for styling
+# -----------------------------------------
+st.markdown(
+    """
+<style>
+    /* General App Styling */
+    body {
+        font-family: 'Segoe UI', sans-serif;
     }
-
-    /* -----------------------------
-       TITLE HEADER
-    ------------------------------ */
-    .app-header {
+ 
+    /* Header */
+    .main-title {
+        color: #00E0FF;
         text-align: center;
-        font-size: 1.4rem;
+        font-size: 3em;
+        font-weight: 700;
+        text-shadow: 1px 1px 10px rgba(0,255,255,0.3);
+        margin-bottom: 0.3rem;
+    }
+ 
+    .subtitle {
+        color: #A9B7C6;
+        text-align: center;
+        font-size: 1.3em;
+        margin-bottom: 3rem;
+    }
+ 
+    /* Section Headers */
+    .section-header {
+        color: #00C896;
+        font-size: 1.6em;
         font-weight: 600;
-        color: #1e3a8a;
-        padding-top: 0.8rem;
+        margin-bottom: 1rem;
     }
-
-    /* -----------------------------
-       SUB HEADER
-    ------------------------------ */
-    .sub-header {
-        text-align: center;
-        font-size: 1.1rem;
-        color: #444;
-        margin-bottom: 0.5rem;
-    }
-
-    /* -----------------------------
-       CARD CONTAINERS
-    ------------------------------ */
-    .card {
-        background: #ffffff;
-        border-radius: 20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-        padding: 1.5rem;
-        text-align: center;
-        margin: 1rem auto;
-        width: 90%;
-        max-width: 420px;
-    }
-
-    /* -----------------------------
-       TEMPERATURE VALUES
-    ------------------------------ */
-    .temp {
-        font-size: 3rem;
-        font-weight: 500;
-        color: #1e3a8a;
-    }
-    .unit {
-        font-size: 1.2rem;
-        vertical-align: super;
-        color: #3b82f6;
-    }
-
-    /* -----------------------------
-       LABELS AND TEXT
-    ------------------------------ */
-    .label {
-        color: #666;
-        font-size: 0.9rem;
-        margin-top: -5px;
-    }
-
-    /* -----------------------------
-       BUTTON STYLING
-    ------------------------------ */
-    div.stButton > button {
-        background: #e6f0ff;
-        color: #1e3a8a;
-        border: none;
+ 
+    /* Info Cards */
+    .info-card {
+        background: linear-gradient(135deg, #1B1F2A, #10131A);
         border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+ 
+    /* Divider Line */
+    .divider {
+        border-left: 2px solid rgba(255,255,255,0.2);
+        height: 100%;
+        margin: auto;
+        animation: fadeIn 1.5s ease-in-out;
+    }
+ 
+    /* Animated subtle glow */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scaleY(0.8); }
+        to { opacity: 1; transform: scaleY(1); }
+    }
+ 
+    /* Buttons (including Diagnose button) */
+    div.stButton > button {
+        background-color: #00C2A8 !important;  /* same as 'Get Today's Insights' */
+        color: white !important;
+        border: none;
+        border-radius: 10px;
         padding: 0.6rem 1.2rem;
-        font-weight: 500;
-        font-size: 1rem;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        font-weight: 600;
         transition: all 0.2s ease-in-out;
     }
-
     div.stButton > button:hover {
-        background: #3b82f6;
-        color: white;
-        transform: translateY(-2px);
+        background-color: #00E0FF !important;
+        transform: scale(1.02);
     }
-
-    /* -----------------------------
-       ICON-LIKE BUTTON GROUPS
-    ------------------------------ */
-    .bottom-icons {
-        display: flex;
-        justify-content: space-around;
-        margin-top: 1.5rem;
-        color: #1e3a8a;
+ 
+    /* Success & Info Blocks */
+    .stSuccess, .stInfo {
+        border-radius: 10px !important;
     }
-
-    .icon-item {
-        background: #f1f5ff;
-        border-radius: 50%;
-        width: 70px;
-        height: 70px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-        font-size: 0.85rem;
-        flex-direction: column;
+    .header-space {
+    height: 100px;
+    background: linear-gradient(to bottom, rgba(0,226,255,0.05), rgba(0,0,0,0));
     }
-
-    .icon-item span {
-        font-size: 0.7rem;
-        color: #444;
-        margin-top: 0.3rem;
-    }
-
+ 
+ 
     </style>
-""", unsafe_allow_html=True)
-
+    """,
+    unsafe_allow_html=True
+)
+ 
 # ================================================
-# UI Layout
-# ================================================
-st.markdown("<div class='app-header'>Device Details</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-header'>1st Floor Thermostat</div>", unsafe_allow_html=True)
-
-# Temperature display card
-st.markdown("""
-    <div class='card'>
-        <div class='label'>Indoor</div>
-        <div class='temp'>74<span class='unit'>°F</span></div>
-        <hr style='border: 0.5px solid #e3e3e3; margin: 1rem 0;'>
-        <div class='label'>Schedule</div>
-        <div style='display: flex; justify-content: space-around; margin-top: 1rem;'>
-            <div>
-                <div class='label'>Heat to</div>
-                <div class='temp' style='color:#f97316;'>65<span class='unit'>°F</span></div>
-            </div>
-            <div>
-                <div class='label'>Cool to</div>
-                <div class='temp' style='color:#2563eb;'>67<span class='unit'>°F</span></div>
-            </div>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
-
-# Buttons
-col1, col2, col3 = st.columns(3)
-with col2:
-    st.button("Following Schedule")
-
-# Icon-like info buttons
-st.markdown("""
-    <div class='bottom-icons'>
-        <div class='icon-item'>
-            <span>Mode</span>
-            <strong>Auto</strong>
-        </div>
-        <div class='icon-item'>
-            <span>Floor</span>
-            <strong>67°F</strong>
-        </div>
-        <div class='icon-item'>
-            <span>Humidity</span>
-            <strong>54%</strong>
-        </div>
-        <div class='icon-item'>
-            <span>Fan</span>
-            <strong>Schedule</strong>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
-
-# ======================================================
 # HEADER
-# ======================================================
+# ================================================
 st.markdown("<h1 class='main-title'>⚡ Energy Vision</h1>", unsafe_allow_html=True)
 st.markdown("<h3 class='subtitle'>Your Personal Energy & Appliance Consultant</h3>", unsafe_allow_html=True)
-
-# ======================================================
-# LAYOUT: TWO COLUMNS
-# ======================================================
+ 
+# Add extra vertical space below header
+st.markdown("<div class='header-space'></div>", unsafe_allow_html=True)
+ 
+ 
+# Create two sections side by side
 left_col, divider_col, right_col = st.columns([1, 0.05, 1])
-
-# ======================================================
-# LEFT: ENERGY INSIGHTS
-# ======================================================
+ 
+# ====================================================
+# LEFT SIDE → ENERGY INSIGHTS
+# ====================================================
 with left_col:
     st.markdown("<h3 class='section-header'>🌞 Today's Energy Saving Tip</h3>", unsafe_allow_html=True)
-
+ 
     @st.cache_data
     def load_tips():
         return pd.read_excel("energy_tips_with_alert3.xlsx")
-
+ 
     df = load_tips()
-
+ 
     def fetch_weather_from_pincode(pincode: str):
         geo_url = "https://nominatim.openstreetmap.org/search"
         g = requests.get(
             geo_url,
-            params={"postalcode": pincode, "countrycodes": "IN", "format": "json", "limit": 1},
+            params={
+                "postalcode": pincode,
+                "countrycodes": "IN",
+                "format": "json",
+                "limit": 1
+            },
             headers={"User-Agent": "streamlit-weather-app"},
             timeout=20
         )
@@ -228,7 +146,7 @@ with left_col:
         loc = gdata[0]
         lat, lon = float(loc["lat"]), float(loc["lon"])
         display_name = loc.get("display_name", "Unknown Location")
-
+ 
         wx_url = "https://api.open-meteo.com/v1/forecast"
         r = requests.get(wx_url, params={
             "latitude": lat,
@@ -243,7 +161,7 @@ with left_col:
         if "hourly" in data and "relative_humidity_2m" in data["hourly"]:
             humidity = data["hourly"]["relative_humidity_2m"][0]
         return {"temp_c": temp, "humidity": humidity, "place": display_name}
-
+ 
     def match_prompt(forecast, df):
         temp, hum = forecast["temp_c"], forecast["humidity"]
         if temp is None or hum is None:
@@ -251,7 +169,7 @@ with left_col:
         df_temp = df.copy()
         df_temp["distance"] = ((df_temp["Temperature (°C)"] - temp)**2 + (df_temp["Humidity (%)"] - hum)**2) ** 0.5
         return df_temp.loc[df_temp["distance"].idxmin()]
-
+ 
     with st.container():
         pincode = st.text_input("Enter your PIN Code", placeholder="e.g. 560001")
         if st.button("🔍 Get Today's Insights", use_container_width=True):
@@ -260,47 +178,38 @@ with left_col:
             else:
                 try:
                     forecast = fetch_weather_from_pincode(pincode)
-                    st.markdown(
-                        f"""
-                        <div class='info-card'>
-                        <span class='gray-text'><b>📍 Location:</b> {forecast['place']}</span><br>
-                        🌡️ <b>{forecast['temp_c']}°C</b> | 💧 <b>{forecast['humidity']}%</b>
-                        </div>
-                        """, unsafe_allow_html=True
-                    )
-
+                    st.markdown(f"<div class='info-card'><b>📍 Location:</b> {forecast['place']}<br>🌡️ <b>Temperature:</b> {forecast['temp_c']}°C<br>💧 <b>Humidity:</b> {forecast['humidity']}%</div>", unsafe_allow_html=True)
                     row = match_prompt(forecast, df)
                     if row is not None:
-                        st.markdown("<div class='info-card'><b>💡 Energy Tips</b></div>", unsafe_allow_html=True)
-                        st.markdown(f"<div class='diagnosis-card blue-text'>🔹 {row['Alert 1']}</div>", unsafe_allow_html=True)
-                        st.markdown(f"<div class='diagnosis-card gray-text'>🔹 {row['Alert 2']}</div>", unsafe_allow_html=True)
-                        st.markdown(f"<div class='diagnosis-card gray-text'>🔹 {row['Alert 3']}</div>", unsafe_allow_html=True)
+                        st.markdown("<div class='info-card'><b>💡 Energy Tips:</b></div>", unsafe_allow_html=True)
+                        st.success(f"🔹 {row['Alert 1']}")
+                        st.info(f"🔹 {row['Alert 2']}")
+                        st.info(f"🔹 {row['Alert 3']}")
                     else:
-                        st.warning("No matching condition found.")
+                        st.warning("No matching condition found in the tips sheet.")
                 except Exception as e:
                     st.error(f"Error: {e}")
-
-# ======================================================
+ 
+# ====================================================
 # DIVIDER
-# ======================================================
+# ====================================================
 with divider_col:
     st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
-
-# ======================================================
-# RIGHT: APPLIANCE DIAGNOSTIC
-# ======================================================
+# ====================================================
+# RIGHT SIDE → APPLIANCE DIAGNOSTIC
+# ====================================================
 with right_col:
     st.markdown("<h3 class='section-header'>🔧 Appliance Diagnostic Assistant</h3>", unsafe_allow_html=True)
-    st.markdown("Describe the issue to get quick troubleshooting guidance.", unsafe_allow_html=True)
-
+    st.markdown("Describe the issue to get quick troubleshooting guidance.")
+ 
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-
+ 
     with st.form("diagnostic_form"):
-        model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA")
+        model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA ")
         issue = st.text_area("Describe the Issue", placeholder="e.g. No display, making noise...")
         display_error = st.text_input("Error Code (Optional)", placeholder="e.g. E4, F07, etc.")
         submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
-
+ 
     if submitted:
         if not model_name or not issue:
             st.warning("Please fill in the required fields.")
@@ -308,24 +217,67 @@ with right_col:
             with st.spinner("Analyzing the issue..."):
                 prompt = f"""
 You are an intelligent appliance diagnostic assistant.
-Model: {model_name}
+Model Number: {model_name}
 Issue: {issue}
 Error Code: {display_error or 'Not provided'}
-
-Generate 4 sections:
-🔹 Quick Checks / Self-Diagnosis
-🔹 Customer Care Number
-🔹 Probable Causes & Estimated Costs
-🔹 Turnaround Time (TAT)
+ 
+Tasks:
+1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
+2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
+ 
+   🔹 Quick Checks / Self-Diagnosis  
+   • Give 2–3 simple user-level checks to perform before calling a technician.
+ 
+   🔹 Customer Care Number  
+   • Give the official customer care helpline number for the brand.
+ 
+   🔹 Probable Causes & Estimated Costs  
+   • Mention 2–3 possible technical causes (just name them, no explanations).  
+   • Add approximate cost range in INR for each cause.  
+   • Present this section **strictly as a clean 2-column table** —  
+     Column 1: “Probable Cause”  
+     Column 2: “Estimated Cost (INR Range)”.  
+   • Do not include markdown symbols like |, *, or #.  
+   • Use simple spacing to make it look like a neat table.
+ 
+   🔹 Turnaround Time (TAT)  
+   • Mention the realistic average service time in days.
+ 
+Formatting Instructions:
+- Each section heading should start with a blue diamond (🔹).
+- Each point should start with a small black dot (•) except inside the table.
+- Keep response short, well-structured, and visually clean.
+- Avoid unnecessary text or explanations.
 """
+ 
                 try:
                     model = genai.GenerativeModel("gemini-2.5-flash-lite")
                     response = model.generate_content(prompt)
                     text = response.text
+ 
                     st.markdown("<div class='info-card'><h4>✅ Diagnosis Report</h4></div>", unsafe_allow_html=True)
-                    for sec in re.split(r'(?=🔹)', text):
+                    sections = re.split(r'(?=🔹)', text)
+                    colors = ["#007ACC", "#008CBA", "#006C77", "#005577"]
+ 
+                    for i, sec in enumerate(sections):
                         sec = sec.strip()
                         if sec:
-                            st.markdown(f"<div class='diagnosis-card'>{sec}</div>", unsafe_allow_html=True)
+                            sec_html = re.sub(r'^\s*[-*]\s+', '• ', sec, flags=re.MULTILINE)
+                            sec_html = sec_html.replace('\n', '<br>')
+                            st.markdown(
+                                f"""
+<div style="
+                                    background-color:{colors[i % len(colors)]};
+                                    color:#FFFFFF;
+                                    padding:1.2rem;
+                                    border-radius:12px;
+                                    margin-bottom:1rem;
+                                    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+                                ">
+                                {sec_html}
+</div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
