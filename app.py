@@ -187,24 +187,29 @@ with left_col:
         return df_temp.loc[df_temp["distance"].idxmin()]
  
     with st.container():
+    col1, col2 = st.columns([0.5, 0.5])  # half-width layout
+    with col1:
         pincode = st.text_input("Enter your PIN Code", placeholder="e.g. 560001")
-        if st.button("🔍 Get Today's Insights", use_container_width=True):
-            if not pincode:
-                st.error("Please enter a valid PIN code.")
-            else:
-                try:
-                    forecast = fetch_weather_from_pincode(pincode)
-                    st.markdown(f"<div class='info-card'><b>📍 Location:</b> {forecast['place']}<br>🌡️ <b>Temperature:</b> {forecast['temp_c']}°C<br>💧 <b>Humidity:</b> {forecast['humidity']}%</div>", unsafe_allow_html=True)
-                    row = match_prompt(forecast, df)
-                    if row is not None:
-                        st.markdown("<div class='info-card'><b>💡 Energy Tips:</b></div>", unsafe_allow_html=True)
-                        st.success(f"🔹 {row['Alert 1']}")
-                        st.info(f"🔹 {row['Alert 2']}")
-                        st.info(f"🔹 {row['Alert 3']}")
-                    else:
-                        st.warning("No matching condition found in the tips sheet.")
-                except Exception as e:
-                    st.error(f"Error: {e}")
+    # Optional: leave col2 empty for spacing
+
+    if st.button("🔍 Get Today's Insights", use_container_width=True):
+        if not pincode:
+            st.error("Please enter a valid PIN code.")
+        else:
+            try:
+                forecast = fetch_weather_from_pincode(pincode)
+                st.markdown(f"<div class='info-card'><b>📍 Location:</b> {forecast['place']}<br>🌡️ <b>Temperature:</b> {forecast['temp_c']}°C<br>💧 <b>Humidity:</b> {forecast['humidity']}%</div>", unsafe_allow_html=True)
+                row = match_prompt(forecast, df)
+                if row is not None:
+                    st.markdown("<div class='info-card'><b>💡 Energy Tips:</b></div>", unsafe_allow_html=True)
+                    st.success(f"🔹 {row['Alert 1']}")
+                    st.info(f"🔹 {row['Alert 2']}")
+                    st.info(f"🔹 {row['Alert 3']}")
+                else:
+                    st.warning("No matching condition found in the tips sheet.")
+            except Exception as e:
+                st.error(f"Error: {e}")
+
  
 # ====================================================
 # DIVIDER
