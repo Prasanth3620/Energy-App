@@ -17,102 +17,111 @@ st.set_page_config(
 # -----------------------------------------
 st.markdown("""
 <style>
+    /* Tesla-Inspired Dark Theme */
     body {
         font-family: 'Segoe UI', sans-serif;
-        background: linear-gradient(to bottom, #D6E1F0, #C5D4E7);
-        color: #0D1B2A;
+        background: linear-gradient(to bottom right, #0B0C0E, #121417, #181B1F);
+        color: #E6EDF3;
     }
 
     .main-title {
-        color: #005FE6;
+        color: #00C2A8;
         text-align: center;
         font-size: 3em;
         font-weight: 700;
-        text-shadow: 0 1px 10px rgba(0, 95, 230, 0.25);
+        text-shadow: 0 1px 12px rgba(0, 194, 168, 0.4);
         margin-bottom: 0.3rem;
     }
 
     .subtitle {
-        color: #3F4E61;
+        color: #9BA4AE;
         text-align: center;
-        font-size: 1.3em;
+        font-size: 1.2em;
         margin-bottom: 2.5rem;
     }
 
     .section-header {
-        color: #005FE6;
+        color: #00C2A8;
         font-size: 1.6em;
         font-weight: 600;
         margin-bottom: 1rem;
+        text-shadow: 0 0 8px rgba(0,194,168,0.25);
     }
 
+    /* Card styling */
     .info-card {
-        background: linear-gradient(135deg, #E3E9F4, #D8E1F2);
-        border-radius: 18px;
+        background: radial-gradient(circle at top left, #1A1C1F, #0E0F11 80%);
+        border-radius: 16px;
         padding: 1.5rem;
         margin-bottom: 1.5rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-        border: 1px solid rgba(0, 95, 230, 0.15);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(6px);
     }
 
     .divider {
-        border-left: 2px solid rgba(0, 0, 0, 0.1);
+        border-left: 2px solid rgba(255, 255, 255, 0.1);
         height: 100%;
         margin: auto;
     }
 
+    /* Buttons */
     div.stButton > button {
-        background: linear-gradient(135deg, #005FE6, #007FFF) !important;
+        background: linear-gradient(135deg, #00C2A8, #009E8C) !important;
         color: white !important;
         border: none;
         border-radius: 12px;
         padding: 0.6rem 1.2rem;
         font-weight: 600;
         font-size: 1rem;
-        box-shadow: 0 3px 10px rgba(0, 95, 230, 0.4);
+        box-shadow: 0 4px 14px rgba(0, 194, 168, 0.3);
         transition: all 0.2s ease-in-out;
     }
 
     div.stButton > button:hover {
-        background: linear-gradient(135deg, #007FFF, #33A0FF) !important;
-        transform: scale(1.03);
-        box-shadow: 0 5px 14px rgba(0, 95, 230, 0.45);
+        background: linear-gradient(135deg, #00E0BE, #00C2A8) !important;
+        transform: scale(1.04);
+        box-shadow: 0 6px 18px rgba(0, 194, 168, 0.45);
     }
 
+    /* Status/info boxes */
     .stSuccess, .stInfo, .stWarning {
         border-radius: 12px !important;
         padding: 0.8rem !important;
-        background-color: #E3E9F4 !important;
-        color: #003366 !important;
-        border: 1px solid rgba(0, 95, 230, 0.15) !important;
+        background-color: #1A1C1F !important;
+        color: #B5BEC8 !important;
+        border: 1px solid rgba(0,194,168,0.25) !important;
     }
 
+    /* Diagnosis Report styling */
     div[data-testid="stMarkdownContainer"] > div[style*="background-color"] {
         border-radius: 16px !important;
-        background: linear-gradient(135deg, #E3E9F4, #D8E1F2) !important;
-        color: #002B5C !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+        background: linear-gradient(145deg, #1A1C1F, #0E0F11) !important;
+        color: #E6EDF3 !important;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid rgba(255,255,255,0.05);
     }
 
     .header-space {
         height: 80px;
-        background: linear-gradient(to bottom, rgba(0,95,230,0.1), rgba(255,255,255,0));
+        background: linear-gradient(to bottom, rgba(0,194,168,0.05), rgba(0,0,0,0));
     }
 
+    /* Inputs */
     .stTextInput > div > div > input, textarea {
-        background: #FFFFFF !important;
-        border: 1px solid rgba(0,95,230,0.3) !important;
+        background: #1A1C1F !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
         border-radius: 10px !important;
-        color: #0D1B2A !important;
+        color: #E6EDF3 !important;
     }
 
     label {
-        color: #003366 !important;
+        color: #A9B7C6 !important;
         font-weight: 500 !important;
     }
 
     .stApp {
-        background: linear-gradient(to bottom, #D6E1F0, #C5D4E7);
+        background: linear-gradient(to bottom right, #0B0C0E, #121417, #181B1F);
     }
 </style>
 """, unsafe_allow_html=True)
