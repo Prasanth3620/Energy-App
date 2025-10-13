@@ -4,120 +4,190 @@ import pandas as pd
 import google.generativeai as genai
 import re
 
-# ======================================================
+# ================================================
 # Streamlit Page Setup
-# ======================================================
-st.set_page_config(page_title="⚡ Energy Vision", layout="wide")
+# ================================================
+st.set_page_config(
+    page_title="Device Details",
+    layout="centered"
+)
 
-# ======================================================
-# CLEAN SMART-HOME DASHBOARD THEME (Light UI)
-# ======================================================
+# ================================================
+# Custom CSS for Google-Nest-Like Look
+# ================================================
 st.markdown("""
-<style>
+    <style>
+    /* -----------------------------
+       GENERAL APP BACKGROUND
+    ------------------------------ */
+    html, body, [class*="stAppViewContainer"], [class*="main"] {
+        background: linear-gradient(to bottom, #ffffff 0%, #dbe9f9 100%) !important;
+        color: #333333;
+        font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+    }
 
-/* ---------- PAGE BACKGROUND ---------- */
-body {
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(to bottom, #F7F9FB, #FFFFFF);
-    color: #1A1A1A;
-}
+    /* -----------------------------
+       TITLE HEADER
+    ------------------------------ */
+    .app-header {
+        text-align: center;
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #1e3a8a;
+        padding-top: 0.8rem;
+    }
 
-/* Remove default padding */
-.block-container {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    max-width: 1200px;
-}
+    /* -----------------------------
+       SUB HEADER
+    ------------------------------ */
+    .sub-header {
+        text-align: center;
+        font-size: 1.1rem;
+        color: #444;
+        margin-bottom: 0.5rem;
+    }
 
-/* ---------- HEADER ---------- */
-.main-title {
-    text-align: center;
-    font-weight: 600;
-    color: #0078D4;
-    font-size: 2.4rem;
-    margin-bottom: 0.3rem;
-}
-.subtitle {
-    text-align: center;
-    color: #5E6A76;
-    font-size: 1.1rem;
-    margin-bottom: 2.5rem;
-}
+    /* -----------------------------
+       CARD CONTAINERS
+    ------------------------------ */
+    .card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        padding: 1.5rem;
+        text-align: center;
+        margin: 1rem auto;
+        width: 90%;
+        max-width: 420px;
+    }
 
-/* ---------- SECTION HEADERS ---------- */
-.section-header {
-    color: #0078D4;
-    font-weight: 600;
-    font-size: 1.3rem;
-    margin-bottom: 1rem;
-}
+    /* -----------------------------
+       TEMPERATURE VALUES
+    ------------------------------ */
+    .temp {
+        font-size: 3rem;
+        font-weight: 500;
+        color: #1e3a8a;
+    }
+    .unit {
+        font-size: 1.2rem;
+        vertical-align: super;
+        color: #3b82f6;
+    }
 
-/* ---------- CARD STYLE ---------- */
-.info-card {
-    background: #FFFFFF;
-    border-radius: 12px;
-    padding: 1.2rem 1.5rem;
-    margin-bottom: 1rem;
-    border: 1px solid #E5E7EB;
-    box-shadow: 0px 3px 8px rgba(0,0,0,0.05);
-    transition: all 0.2s ease-in-out;
-}
-.info-card:hover {
-    box-shadow: 0px 5px 12px rgba(0,0,0,0.08);
-}
+    /* -----------------------------
+       LABELS AND TEXT
+    ------------------------------ */
+    .label {
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: -5px;
+    }
 
-/* ---------- DIVIDER ---------- */
-.divider {
-    border-left: 1.5px solid #E5E7EB;
-    height: 100%;
-    margin: auto;
-}
+    /* -----------------------------
+       BUTTON STYLING
+    ------------------------------ */
+    div.stButton > button {
+        background: #e6f0ff;
+        color: #1e3a8a;
+        border: none;
+        border-radius: 15px;
+        padding: 0.6rem 1.2rem;
+        font-weight: 500;
+        font-size: 1rem;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        transition: all 0.2s ease-in-out;
+    }
 
-/* ---------- BUTTONS ---------- */
-div.stButton > button {
-    background-color: #0078D4 !important;
-    color: white !important;
-    border: none;
-    border-radius: 10px;
-    padding: 0.6rem 1.2rem;
-    font-weight: 600;
-    box-shadow: 0 2px 6px rgba(0,120,212,0.25);
-    transition: all 0.2s ease-in-out;
-}
-div.stButton > button:hover {
-    background-color: #008AED !important;
-    transform: scale(1.02);
-}
+    div.stButton > button:hover {
+        background: #3b82f6;
+        color: white;
+        transform: translateY(-2px);
+    }
 
-/* ---------- SUCCESS / INFO BOXES ---------- */
-.stSuccess, .stInfo, .stWarning {
-    border-radius: 10px !important;
-    background-color: #F9FAFB !important;
-    color: #1A1A1A !important;
-}
+    /* -----------------------------
+       ICON-LIKE BUTTON GROUPS
+    ------------------------------ */
+    .bottom-icons {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 1.5rem;
+        color: #1e3a8a;
+    }
 
-/* ---------- FORM FIELDS ---------- */
-input, textarea {
-    border-radius: 8px !important;
-    border: 1px solid #D1D5DB !important;
-}
+    .icon-item {
+        background: #f1f5ff;
+        border-radius: 50%;
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        font-size: 0.85rem;
+        flex-direction: column;
+    }
 
-/* ---------- DIAGNOSIS CARDS ---------- */
-.diagnosis-card {
-    background-color: #FFFFFF;
-    border-radius: 10px;
-    padding: 1rem 1.2rem;
-    margin-bottom: 0.8rem;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.05);
-    border: 1px solid #E5E7EB;
-}
+    .icon-item span {
+        font-size: 0.7rem;
+        color: #444;
+        margin-top: 0.3rem;
+    }
 
-/* ---------- LIGHT ICONS COLORS ---------- */
-.blue-text { color: #0078D4; }
-.orange-text { color: #F57C00; }
-.gray-text { color: #6B7280; }
+    </style>
+""", unsafe_allow_html=True)
 
-</style>
+# ================================================
+# UI Layout
+# ================================================
+st.markdown("<div class='app-header'>Device Details</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-header'>1st Floor Thermostat</div>", unsafe_allow_html=True)
+
+# Temperature display card
+st.markdown("""
+    <div class='card'>
+        <div class='label'>Indoor</div>
+        <div class='temp'>74<span class='unit'>°F</span></div>
+        <hr style='border: 0.5px solid #e3e3e3; margin: 1rem 0;'>
+        <div class='label'>Schedule</div>
+        <div style='display: flex; justify-content: space-around; margin-top: 1rem;'>
+            <div>
+                <div class='label'>Heat to</div>
+                <div class='temp' style='color:#f97316;'>65<span class='unit'>°F</span></div>
+            </div>
+            <div>
+                <div class='label'>Cool to</div>
+                <div class='temp' style='color:#2563eb;'>67<span class='unit'>°F</span></div>
+            </div>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+# Buttons
+col1, col2, col3 = st.columns(3)
+with col2:
+    st.button("Following Schedule")
+
+# Icon-like info buttons
+st.markdown("""
+    <div class='bottom-icons'>
+        <div class='icon-item'>
+            <span>Mode</span>
+            <strong>Auto</strong>
+        </div>
+        <div class='icon-item'>
+            <span>Floor</span>
+            <strong>67°F</strong>
+        </div>
+        <div class='icon-item'>
+            <span>Humidity</span>
+            <strong>54%</strong>
+        </div>
+        <div class='icon-item'>
+            <span>Fan</span>
+            <strong>Schedule</strong>
+        </div>
+    </div>
 """, unsafe_allow_html=True)
 
 # ======================================================
