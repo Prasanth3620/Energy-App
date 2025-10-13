@@ -15,122 +15,107 @@ st.set_page_config(
 # -----------------------------------------
 # Custom CSS for styling
 # -----------------------------------------
-st.markdown(
-    """
+st.markdown("""
 <style>
-    /* General Light Theme Styling */
     body {
         font-family: 'Segoe UI', sans-serif;
-        background: linear-gradient(to bottom, #f8fbff, #e9f3ff);
-        color: #1a1a1a;
+        background: linear-gradient(to bottom, #D6E1F0, #C5D4E7);
+        color: #0D1B2A;
     }
 
-    /* Header */
     .main-title {
-        color: #007AFF;
+        color: #005FE6;
         text-align: center;
         font-size: 3em;
         font-weight: 700;
-        text-shadow: 0 1px 8px rgba(0, 122, 255, 0.15);
+        text-shadow: 0 1px 10px rgba(0, 95, 230, 0.25);
         margin-bottom: 0.3rem;
     }
 
     .subtitle {
-        color: #5f6b7a;
+        color: #3F4E61;
         text-align: center;
         font-size: 1.3em;
         margin-bottom: 2.5rem;
     }
 
-    /* Section Headers */
     .section-header {
-        color: #007AFF;
+        color: #005FE6;
         font-size: 1.6em;
         font-weight: 600;
         margin-bottom: 1rem;
     }
 
-    /* Info Cards */
     .info-card {
-        background: linear-gradient(135deg, #ffffff, #f4f8ff);
+        background: linear-gradient(135deg, #E3E9F4, #D8E1F2);
         border-radius: 18px;
         padding: 1.5rem;
         margin-bottom: 1.5rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(200, 220, 255, 0.4);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(0, 95, 230, 0.15);
     }
 
-    /* Divider Line */
     .divider {
-        border-left: 2px solid rgba(0,0,0,0.08);
+        border-left: 2px solid rgba(0, 0, 0, 0.1);
         height: 100%;
         margin: auto;
     }
 
-    /* Buttons (Get Today's Insights + Diagnose) */
     div.stButton > button {
-        background: linear-gradient(135deg, #007AFF, #00B4FF) !important;
+        background: linear-gradient(135deg, #005FE6, #007FFF) !important;
         color: white !important;
         border: none;
         border-radius: 12px;
         padding: 0.6rem 1.2rem;
         font-weight: 600;
         font-size: 1rem;
-        box-shadow: 0 3px 10px rgba(0, 122, 255, 0.3);
+        box-shadow: 0 3px 10px rgba(0, 95, 230, 0.4);
         transition: all 0.2s ease-in-out;
     }
 
     div.stButton > button:hover {
-        background: linear-gradient(135deg, #009DFF, #33C4FF) !important;
+        background: linear-gradient(135deg, #007FFF, #33A0FF) !important;
         transform: scale(1.03);
-        box-shadow: 0 5px 12px rgba(0, 122, 255, 0.4);
+        box-shadow: 0 5px 14px rgba(0, 95, 230, 0.45);
     }
 
-    /* Streamlit success/info/warning styling (light friendly) */
     .stSuccess, .stInfo, .stWarning {
         border-radius: 12px !important;
         padding: 0.8rem !important;
-        background-color: #f0f7ff !important;
-        color: #003a70 !important;
-        border: 1px solid rgba(0, 122, 255, 0.1) !important;
+        background-color: #E3E9F4 !important;
+        color: #003366 !important;
+        border: 1px solid rgba(0, 95, 230, 0.15) !important;
     }
 
-    /* Diagnosis Report Cards */
     div[data-testid="stMarkdownContainer"] > div[style*="background-color"] {
         border-radius: 16px !important;
-        background: linear-gradient(135deg, #f7fbff, #eaf3ff) !important;
-        color: #002b5c !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
+        background: linear-gradient(135deg, #E3E9F4, #D8E1F2) !important;
+        color: #002B5C !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
     }
 
-    /* Header spacing (soft gradient transition) */
     .header-space {
         height: 80px;
-        background: linear-gradient(to bottom, rgba(0,122,255,0.05), rgba(255,255,255,0));
+        background: linear-gradient(to bottom, rgba(0,95,230,0.1), rgba(255,255,255,0));
     }
 
-    /* Input boxes */
     .stTextInput > div > div > input, textarea {
-        background: #ffffff !important;
-        border: 1px solid rgba(0,122,255,0.2) !important;
+        background: #FFFFFF !important;
+        border: 1px solid rgba(0,95,230,0.3) !important;
         border-radius: 10px !important;
-        color: #1a1a1a !important;
+        color: #0D1B2A !important;
     }
 
-    /* Form labels */
     label {
-        color: #004a80 !important;
+        color: #003366 !important;
         font-weight: 500 !important;
     }
 
-    /* Streamlit dark theme overrides */
     .stApp {
-        background: linear-gradient(to bottom, #f8fbff, #e9f3ff);
+        background: linear-gradient(to bottom, #D6E1F0, #C5D4E7);
     }
 </style>
-""",
-    unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
  
 # ================================================
 # HEADER
