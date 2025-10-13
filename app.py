@@ -17,112 +17,118 @@ st.set_page_config(
 # -----------------------------------------
 st.markdown("""
 <style>
-    /* Tesla-Inspired Dark Theme */
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        background: linear-gradient(to bottom right, #0B0C0E, #121417, #181B1F);
-        color: #E6EDF3;
-    }
+/* --- Premium Dark UI (Tesla-inspired, enhanced) --- */
+body, .stApp {
+    background: linear-gradient(135deg, #0B0E13 0%, #101419 40%, #0F171C 100%);
+    color: #E8EEF5;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
 
-    .main-title {
-        color: #00C2A8;
-        text-align: center;
-        font-size: 3em;
-        font-weight: 700;
-        text-shadow: 0 1px 12px rgba(0, 194, 168, 0.4);
-        margin-bottom: 0.3rem;
-    }
+/* Header */
+.main-title {
+    color: #00D0FF;
+    text-align: center;
+    font-size: 3em;
+    font-weight: 700;
+    text-shadow: 0 2px 18px rgba(0, 208, 255, 0.4);
+    margin-bottom: 0.2rem;
+    letter-spacing: 0.5px;
+}
 
-    .subtitle {
-        color: #9BA4AE;
-        text-align: center;
-        font-size: 1.2em;
-        margin-bottom: 2.5rem;
-    }
+.subtitle {
+    color: #AAB5C2;
+    text-align: center;
+    font-size: 1.1em;
+    margin-bottom: 2.2rem;
+}
 
-    .section-header {
-        color: #00C2A8;
-        font-size: 1.6em;
-        font-weight: 600;
-        margin-bottom: 1rem;
-        text-shadow: 0 0 8px rgba(0,194,168,0.25);
-    }
+/* Section headers */
+.section-header {
+    color: #00B7FF;
+    font-size: 1.5em;
+    font-weight: 600;
+    text-shadow: 0 0 10px rgba(0, 183, 255, 0.35);
+    margin-top: 1rem;
+}
 
-    /* Card styling */
-    .info-card {
-        background: radial-gradient(circle at top left, #1A1C1F, #0E0F11 80%);
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(6px);
-    }
+/* Info cards */
+.info-card {
+    background: radial-gradient(circle at top left, #181E25 0%, #0F1418 90%);
+    border-radius: 18px;
+    padding: 1.4rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65), inset 0 0 20px rgba(0, 208, 255, 0.04);
+    transition: all 0.25s ease-in-out;
+}
+.info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 208, 255, 0.1), inset 0 0 25px rgba(0, 208, 255, 0.06);
+}
 
-    .divider {
-        border-left: 2px solid rgba(255, 255, 255, 0.1);
-        height: 100%;
-        margin: auto;
-    }
+/* Buttons */
+div.stButton > button {
+    background: linear-gradient(135deg, #00B7FF, #007BFF);
+    color: white !important;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.7rem 1.3rem;
+    box-shadow: 0 4px 15px rgba(0, 183, 255, 0.35);
+    transition: all 0.25s ease-in-out;
+}
+div.stButton > button:hover {
+    background: linear-gradient(135deg, #00D0FF, #00A9FF);
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 183, 255, 0.5);
+}
 
-    /* Buttons */
-    div.stButton > button {
-        background: linear-gradient(135deg, #00C2A8, #009E8C) !important;
-        color: white !important;
-        border: none;
-        border-radius: 12px;
-        padding: 0.6rem 1.2rem;
-        font-weight: 600;
-        font-size: 1rem;
-        box-shadow: 0 4px 14px rgba(0, 194, 168, 0.3);
-        transition: all 0.2s ease-in-out;
-    }
+/* Inputs */
+.stTextInput > div > div > input, textarea {
+    background: #151A20 !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 10px !important;
+    color: #E8EEF5 !important;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+}
+.stTextInput > div > div > input:focus {
+    border-color: #00B7FF !important;
+    box-shadow: 0 0 10px rgba(0,183,255,0.3);
+}
 
-    div.stButton > button:hover {
-        background: linear-gradient(135deg, #00E0BE, #00C2A8) !important;
-        transform: scale(1.04);
-        box-shadow: 0 6px 18px rgba(0, 194, 168, 0.45);
-    }
+/* Status and containers */
+.stSuccess, .stInfo, .stWarning {
+    border-radius: 12px !important;
+    padding: 0.9rem !important;
+    background-color: #151A20 !important;
+    border: 1px solid rgba(0,183,255,0.25) !important;
+    color: #BFD8E8 !important;
+}
 
-    /* Status/info boxes */
-    .stSuccess, .stInfo, .stWarning {
-        border-radius: 12px !important;
-        padding: 0.8rem !important;
-        background-color: #1A1C1F !important;
-        color: #B5BEC8 !important;
-        border: 1px solid rgba(0,194,168,0.25) !important;
-    }
+/* Divider line */
+.divider {
+    border-left: 2px solid rgba(255,255,255,0.07);
+    height: 100%;
+    margin: auto;
+}
 
-    /* Diagnosis Report styling */
-    div[data-testid="stMarkdownContainer"] > div[style*="background-color"] {
-        border-radius: 16px !important;
-        background: linear-gradient(145deg, #1A1C1F, #0E0F11) !important;
-        color: #E6EDF3 !important;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
-        border: 1px solid rgba(255,255,255,0.05);
-    }
+/* Subtle glow animation for active sections */
+@keyframes glowPulse {
+    0% { box-shadow: 0 0 10px rgba(0,208,255,0.15); }
+    50% { box-shadow: 0 0 20px rgba(0,208,255,0.35); }
+    100% { box-shadow: 0 0 10px rgba(0,208,255,0.15); }
+}
+.glow-active {
+    animation: glowPulse 2.5s infinite ease-in-out;
+}
 
-    .header-space {
-        height: 80px;
-        background: linear-gradient(to bottom, rgba(0,194,168,0.05), rgba(0,0,0,0));
-    }
-
-    /* Inputs */
-    .stTextInput > div > div > input, textarea {
-        background: #1A1C1F !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        border-radius: 10px !important;
-        color: #E6EDF3 !important;
-    }
-
-    label {
-        color: #A9B7C6 !important;
-        font-weight: 500 !important;
-    }
-
-    .stApp {
-        background: linear-gradient(to bottom right, #0B0C0E, #121417, #181B1F);
-    }
+/* Footer or subtle fade */
+.header-space {
+    height: 60px;
+    background: linear-gradient(to bottom, rgba(0,183,255,0.06), rgba(0,0,0,0));
+}
 </style>
 """, unsafe_allow_html=True)
  
