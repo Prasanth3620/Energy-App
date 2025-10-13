@@ -13,89 +13,102 @@ st.set_page_config(
 )
 
 # -----------------------------------------
-# Custom CSS for styling
+# Modern Light Theme CSS
 # -----------------------------------------
 st.markdown(
     """
     <style>
-    /* General App Styling */
+    /* ----------- General Page ----------- */
     body {
         font-family: 'Segoe UI', sans-serif;
+        background-color: #F5F7FA;
+        color: #1A1A1A;
     }
 
-    /* Header */
+    /* Remove Streamlit default padding */
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    /* ----------- Header ----------- */
     .main-title {
-        color: #00E0FF;
+        color: #0078D7;
         text-align: center;
-        font-size: 3em;
+        font-size: 2.6em;
         font-weight: 700;
-        text-shadow: 1px 1px 10px rgba(0,255,255,0.3);
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.2rem;
     }
 
     .subtitle {
-        color: #A9B7C6;
+        color: #6B7280;
         text-align: center;
-        font-size: 1.3em;
-        margin-bottom: 3rem;
+        font-size: 1.2em;
+        margin-bottom: 2rem;
     }
 
-    /* Section Headers */
+    /* ----------- Section Headers ----------- */
     .section-header {
-        color: #00C896;
-        font-size: 1.6em;
+        color: #0078D7;
+        font-size: 1.4em;
         font-weight: 600;
         margin-bottom: 1rem;
     }
 
-    /* Info Cards */
+    /* ----------- Card Design ----------- */
     .info-card {
-        background: linear-gradient(135deg, #1B1F2A, #10131A);
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        background: #FFFFFF;
+        border-radius: 14px;
+        padding: 1.3rem 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        border: 1px solid #E5E7EB;
     }
 
-    /* Divider Line */
+    /* Card hover */
+    .info-card:hover {
+        box-shadow: 0 4px 16px rgba(0,120,215,0.15);
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* ----------- Divider ----------- */
     .divider {
-        border-left: 2px solid rgba(255,255,255,0.2);
+        border-left: 2px solid #E5E7EB;
         height: 100%;
         margin: auto;
-        animation: fadeIn 1.5s ease-in-out;
     }
 
-    /* Animated subtle glow */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: scaleY(0.8); }
-        to { opacity: 1; transform: scaleY(1); }
-    }
-
-    /* Buttons (including Diagnose button) */
+    /* ----------- Buttons ----------- */
     div.stButton > button {
-        background-color: #00C2A8 !important;  /* same as 'Get Today's Insights' */
+        background: linear-gradient(90deg, #0078D7, #0094FF);
         color: white !important;
         border: none;
         border-radius: 10px;
         padding: 0.6rem 1.2rem;
         font-weight: 600;
+        box-shadow: 0 3px 8px rgba(0,120,215,0.25);
         transition: all 0.2s ease-in-out;
     }
     div.stButton > button:hover {
-        background-color: #00E0FF !important;
+        background: linear-gradient(90deg, #0094FF, #00B7FF);
         transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(0,120,215,0.3);
     }
 
-    /* Success & Info Blocks */
-    .stSuccess, .stInfo {
-        border-radius: 10px !important;
-    }
-    .header-space {
-    height: 100px;
-    background: linear-gradient(to bottom, rgba(0,226,255,0.05), rgba(0,0,0,0));
+    /* ----------- Diagnosis Cards ----------- */
+    .diagnosis-card {
+        border-radius: 14px;
+        padding: 1.2rem;
+        background: linear-gradient(180deg, #F8FAFC, #FFFFFF);
+        border: 1px solid #E5E7EB;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        margin-bottom: 1rem;
     }
 
-
+    /* Scrollable area fix */
+    [data-testid="stVerticalBlock"] {
+        gap: 1rem !important;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -106,10 +119,6 @@ st.markdown(
 # ================================================
 st.markdown("<h1 class='main-title'>⚡ Energy Vision</h1>", unsafe_allow_html=True)
 st.markdown("<h3 class='subtitle'>Your Personal Energy & Appliance Consultant</h3>", unsafe_allow_html=True)
-
-# Add extra vertical space below header
-st.markdown("<div class='header-space'></div>", unsafe_allow_html=True)
-
 
 # Create two sections side by side
 left_col, divider_col, right_col = st.columns([1, 0.05, 1])
@@ -130,12 +139,7 @@ with left_col:
         geo_url = "https://nominatim.openstreetmap.org/search"
         g = requests.get(
             geo_url,
-            params={
-                "postalcode": pincode,
-                "countrycodes": "IN",
-                "format": "json",
-                "limit": 1
-            },
+            params={"postalcode": pincode, "countrycodes": "IN", "format": "json", "limit": 1},
             headers={"User-Agent": "streamlit-weather-app"},
             timeout=20
         )
@@ -178,7 +182,16 @@ with left_col:
             else:
                 try:
                     forecast = fetch_weather_from_pincode(pincode)
-                    st.markdown(f"<div class='info-card'><b>📍 Location:</b> {forecast['place']}<br>🌡️ <b>Temperature:</b> {forecast['temp_c']}°C<br>💧 <b>Humidity:</b> {forecast['humidity']}%</div>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"""
+                        <div class='info-card'>
+                        <b>📍 Location:</b> {forecast['place']}<br>
+                        🌡️ <b>Temperature:</b> {forecast['temp_c']}°C<br>
+                        💧 <b>Humidity:</b> {forecast['humidity']}%
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
                     row = match_prompt(forecast, df)
                     if row is not None:
                         st.markdown("<div class='info-card'><b>💡 Energy Tips:</b></div>", unsafe_allow_html=True)
@@ -225,13 +238,13 @@ Error Code: {display_error or 'Not provided'}
 Tasks:
 1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
 2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
-
+ 
    🔹 Quick Checks / Self-Diagnosis  
    • Give 2–3 simple user-level checks to perform before calling a technician.
-
+ 
    🔹 Customer Care Number  
    • Give the official customer care helpline number for the brand.
-
+ 
    🔹 Probable Causes & Estimated Costs  
    • Mention 2–3 possible technical causes (just name them, no explanations).  
    • Add approximate cost range in INR for each cause.  
@@ -240,17 +253,16 @@ Tasks:
      Column 2: “Estimated Cost (INR Range)”.  
    • Do not include markdown symbols like |, *, or #.  
    • Use simple spacing to make it look like a neat table.
-
+ 
    🔹 Turnaround Time (TAT)  
    • Mention the realistic average service time in days.
-
+ 
 Formatting Instructions:
 - Each section heading should start with a blue diamond (🔹).
 - Each point should start with a small black dot (•) except inside the table.
 - Keep response short, well-structured, and visually clean.
 - Avoid unnecessary text or explanations.
 """
-
                 try:
                     model = genai.GenerativeModel("gemini-2.5-flash-lite")
                     response = model.generate_content(prompt)
@@ -258,27 +270,11 @@ Formatting Instructions:
 
                     st.markdown("<div class='info-card'><h4>✅ Diagnosis Report</h4></div>", unsafe_allow_html=True)
                     sections = re.split(r'(?=🔹)', text)
-                    colors = ["#007ACC", "#008CBA", "#006C77", "#005577"]
 
-                    for i, sec in enumerate(sections):
+                    for sec in sections:
                         sec = sec.strip()
                         if sec:
-                            sec_html = re.sub(r'^\s*[-*]\s+', '• ', sec, flags=re.MULTILINE)
-                            sec_html = sec_html.replace('\n', '<br>')
-                            st.markdown(
-                                f"""
-                                <div style="
-                                    background-color:{colors[i % len(colors)]};
-                                    color:#FFFFFF;
-                                    padding:1.2rem;
-                                    border-radius:12px;
-                                    margin-bottom:1rem;
-                                    box-shadow: 0 0 15px rgba(0,0,0,0.3);
-                                ">
-                                {sec_html}
-                                </div>
-                                """,
-                                unsafe_allow_html=True,
-                            )
+                            st.markdown(f"<div class='diagnosis-card'>{sec}</div>", unsafe_allow_html=True)
+
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
