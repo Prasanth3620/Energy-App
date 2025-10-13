@@ -226,10 +226,18 @@ with right_col:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
  
     with st.form("diagnostic_form"):
-        model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA ")
-        issue = st.text_area("Describe the Issue", placeholder="e.g. No display, making noise...")
+     # Two columns for half-width inputs
+     col1, col2 = st.columns([0.5, 0.5])
+     with col1:
+        model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA")
+     with col2:
         display_error = st.text_input("Error Code (Optional)", placeholder="e.g. E4, F07, etc.")
-        submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
+
+     # Full-width textarea (can also make half if desired)
+     issue = st.text_area("Describe the Issue", placeholder="e.g. No display, making noise...")
+
+     submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
+
  
     if submitted:
         if not model_name or not issue:
