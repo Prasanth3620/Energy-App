@@ -1,7 +1,8 @@
 [theme]
 base="dark"
-primaryColor="#00C2A8"               # Teal-cyan accent like Tesla icons
-backgroundColor="#0E0F11"            # Deep matte black
-secondaryBackgroundColor="#1A1C1F"   # Slightly lighter gray for cards
-textColor="#E6EDF3"                  # Cool white-gray text
+primaryColor="#00D0FF"               # Neon blue accent
+backgroundColor="#0B0E13"            # Deep navy-charcoal base
+secondaryBackgroundColor="#151A20"   # Slightly lighter dark card background
+textColor="#E8EEF5"                  # Soft white text
 font="sans serif"
+
