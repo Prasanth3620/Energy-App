@@ -4,128 +4,136 @@ import pandas as pd
 import google.generativeai as genai
 import re
 
-# ================================================
+# ======================================================
 # Streamlit Page Setup
-# ================================================
-st.set_page_config(
-    page_title="⚡ Energy Vision",
-    layout="wide",
-)
+# ======================================================
+st.set_page_config(page_title="⚡ Energy Vision", layout="wide")
 
-# -----------------------------------------
-# Modern Light Theme CSS
-# -----------------------------------------
-st.markdown(
-    """
-    <style>
-    /* ----------- General Page ----------- */
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        background-color: #F5F7FA;
-        color: #1A1A1A;
-    }
+# ======================================================
+# CLEAN SMART-HOME DASHBOARD THEME (Light UI)
+# ======================================================
+st.markdown("""
+<style>
 
-    /* Remove Streamlit default padding */
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
+/* ---------- PAGE BACKGROUND ---------- */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(to bottom, #F7F9FB, #FFFFFF);
+    color: #1A1A1A;
+}
 
-    /* ----------- Header ----------- */
-    .main-title {
-        color: #0078D7;
-        text-align: center;
-        font-size: 2.6em;
-        font-weight: 700;
-        margin-bottom: 0.2rem;
-    }
+/* Remove default padding */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    max-width: 1200px;
+}
 
-    .subtitle {
-        color: #6B7280;
-        text-align: center;
-        font-size: 1.2em;
-        margin-bottom: 2rem;
-    }
+/* ---------- HEADER ---------- */
+.main-title {
+    text-align: center;
+    font-weight: 600;
+    color: #0078D4;
+    font-size: 2.4rem;
+    margin-bottom: 0.3rem;
+}
+.subtitle {
+    text-align: center;
+    color: #5E6A76;
+    font-size: 1.1rem;
+    margin-bottom: 2.5rem;
+}
 
-    /* ----------- Section Headers ----------- */
-    .section-header {
-        color: #0078D7;
-        font-size: 1.4em;
-        font-weight: 600;
-        margin-bottom: 1rem;
-    }
+/* ---------- SECTION HEADERS ---------- */
+.section-header {
+    color: #0078D4;
+    font-weight: 600;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
 
-    /* ----------- Card Design ----------- */
-    .info-card {
-        background: #FFFFFF;
-        border-radius: 14px;
-        padding: 1.3rem 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-        border: 1px solid #E5E7EB;
-    }
+/* ---------- CARD STYLE ---------- */
+.info-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0px 3px 8px rgba(0,0,0,0.05);
+    transition: all 0.2s ease-in-out;
+}
+.info-card:hover {
+    box-shadow: 0px 5px 12px rgba(0,0,0,0.08);
+}
 
-    /* Card hover */
-    .info-card:hover {
-        box-shadow: 0 4px 16px rgba(0,120,215,0.15);
-        transition: all 0.2s ease-in-out;
-    }
+/* ---------- DIVIDER ---------- */
+.divider {
+    border-left: 1.5px solid #E5E7EB;
+    height: 100%;
+    margin: auto;
+}
 
-    /* ----------- Divider ----------- */
-    .divider {
-        border-left: 2px solid #E5E7EB;
-        height: 100%;
-        margin: auto;
-    }
+/* ---------- BUTTONS ---------- */
+div.stButton > button {
+    background-color: #0078D4 !important;
+    color: white !important;
+    border: none;
+    border-radius: 10px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0,120,212,0.25);
+    transition: all 0.2s ease-in-out;
+}
+div.stButton > button:hover {
+    background-color: #008AED !important;
+    transform: scale(1.02);
+}
 
-    /* ----------- Buttons ----------- */
-    div.stButton > button {
-        background: linear-gradient(90deg, #0078D7, #0094FF);
-        color: white !important;
-        border: none;
-        border-radius: 10px;
-        padding: 0.6rem 1.2rem;
-        font-weight: 600;
-        box-shadow: 0 3px 8px rgba(0,120,215,0.25);
-        transition: all 0.2s ease-in-out;
-    }
-    div.stButton > button:hover {
-        background: linear-gradient(90deg, #0094FF, #00B7FF);
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px rgba(0,120,215,0.3);
-    }
+/* ---------- SUCCESS / INFO BOXES ---------- */
+.stSuccess, .stInfo, .stWarning {
+    border-radius: 10px !important;
+    background-color: #F9FAFB !important;
+    color: #1A1A1A !important;
+}
 
-    /* ----------- Diagnosis Cards ----------- */
-    .diagnosis-card {
-        border-radius: 14px;
-        padding: 1.2rem;
-        background: linear-gradient(180deg, #F8FAFC, #FFFFFF);
-        border: 1px solid #E5E7EB;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        margin-bottom: 1rem;
-    }
+/* ---------- FORM FIELDS ---------- */
+input, textarea {
+    border-radius: 8px !important;
+    border: 1px solid #D1D5DB !important;
+}
 
-    /* Scrollable area fix */
-    [data-testid="stVerticalBlock"] {
-        gap: 1rem !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+/* ---------- DIAGNOSIS CARDS ---------- */
+.diagnosis-card {
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.8rem;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+    border: 1px solid #E5E7EB;
+}
 
-# ================================================
+/* ---------- LIGHT ICONS COLORS ---------- */
+.blue-text { color: #0078D4; }
+.orange-text { color: #F57C00; }
+.gray-text { color: #6B7280; }
+
+</style>
+""", unsafe_allow_html=True)
+
+# ======================================================
 # HEADER
-# ================================================
+# ======================================================
 st.markdown("<h1 class='main-title'>⚡ Energy Vision</h1>", unsafe_allow_html=True)
 st.markdown("<h3 class='subtitle'>Your Personal Energy & Appliance Consultant</h3>", unsafe_allow_html=True)
 
-# Create two sections side by side
+# ======================================================
+# LAYOUT: TWO COLUMNS
+# ======================================================
 left_col, divider_col, right_col = st.columns([1, 0.05, 1])
 
-# ====================================================
-# LEFT SIDE → ENERGY INSIGHTS
-# ====================================================
+# ======================================================
+# LEFT: ENERGY INSIGHTS
+# ======================================================
 with left_col:
     st.markdown("<h3 class='section-header'>🌞 Today's Energy Saving Tip</h3>", unsafe_allow_html=True)
 
@@ -185,41 +193,40 @@ with left_col:
                     st.markdown(
                         f"""
                         <div class='info-card'>
-                        <b>📍 Location:</b> {forecast['place']}<br>
-                        🌡️ <b>Temperature:</b> {forecast['temp_c']}°C<br>
-                        💧 <b>Humidity:</b> {forecast['humidity']}%
+                        <span class='gray-text'><b>📍 Location:</b> {forecast['place']}</span><br>
+                        🌡️ <b>{forecast['temp_c']}°C</b> | 💧 <b>{forecast['humidity']}%</b>
                         </div>
-                        """,
-                        unsafe_allow_html=True,
+                        """, unsafe_allow_html=True
                     )
+
                     row = match_prompt(forecast, df)
                     if row is not None:
-                        st.markdown("<div class='info-card'><b>💡 Energy Tips:</b></div>", unsafe_allow_html=True)
-                        st.success(f"🔹 {row['Alert 1']}")
-                        st.info(f"🔹 {row['Alert 2']}")
-                        st.info(f"🔹 {row['Alert 3']}")
+                        st.markdown("<div class='info-card'><b>💡 Energy Tips</b></div>", unsafe_allow_html=True)
+                        st.markdown(f"<div class='diagnosis-card blue-text'>🔹 {row['Alert 1']}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div class='diagnosis-card gray-text'>🔹 {row['Alert 2']}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div class='diagnosis-card gray-text'>🔹 {row['Alert 3']}</div>", unsafe_allow_html=True)
                     else:
-                        st.warning("No matching condition found in the tips sheet.")
+                        st.warning("No matching condition found.")
                 except Exception as e:
                     st.error(f"Error: {e}")
 
-# ====================================================
+# ======================================================
 # DIVIDER
-# ====================================================
+# ======================================================
 with divider_col:
     st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
-# ====================================================
-# RIGHT SIDE → APPLIANCE DIAGNOSTIC
-# ====================================================
+# ======================================================
+# RIGHT: APPLIANCE DIAGNOSTIC
+# ======================================================
 with right_col:
     st.markdown("<h3 class='section-header'>🔧 Appliance Diagnostic Assistant</h3>", unsafe_allow_html=True)
-    st.markdown("Describe the issue to get quick troubleshooting guidance.")
+    st.markdown("Describe the issue to get quick troubleshooting guidance.", unsafe_allow_html=True)
 
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
     with st.form("diagnostic_form"):
-        model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA ")
+        model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA")
         issue = st.text_area("Describe the Issue", placeholder="e.g. No display, making noise...")
         display_error = st.text_input("Error Code (Optional)", placeholder="e.g. E4, F07, etc.")
         submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
@@ -231,50 +238,24 @@ with right_col:
             with st.spinner("Analyzing the issue..."):
                 prompt = f"""
 You are an intelligent appliance diagnostic assistant.
-Model Number: {model_name}
+Model: {model_name}
 Issue: {issue}
 Error Code: {display_error or 'Not provided'}
 
-Tasks:
-1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
-2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
- 
-   🔹 Quick Checks / Self-Diagnosis  
-   • Give 2–3 simple user-level checks to perform before calling a technician.
- 
-   🔹 Customer Care Number  
-   • Give the official customer care helpline number for the brand.
- 
-   🔹 Probable Causes & Estimated Costs  
-   • Mention 2–3 possible technical causes (just name them, no explanations).  
-   • Add approximate cost range in INR for each cause.  
-   • Present this section **strictly as a clean 2-column table** —  
-     Column 1: “Probable Cause”  
-     Column 2: “Estimated Cost (INR Range)”.  
-   • Do not include markdown symbols like |, *, or #.  
-   • Use simple spacing to make it look like a neat table.
- 
-   🔹 Turnaround Time (TAT)  
-   • Mention the realistic average service time in days.
- 
-Formatting Instructions:
-- Each section heading should start with a blue diamond (🔹).
-- Each point should start with a small black dot (•) except inside the table.
-- Keep response short, well-structured, and visually clean.
-- Avoid unnecessary text or explanations.
+Generate 4 sections:
+🔹 Quick Checks / Self-Diagnosis
+🔹 Customer Care Number
+🔹 Probable Causes & Estimated Costs
+🔹 Turnaround Time (TAT)
 """
                 try:
                     model = genai.GenerativeModel("gemini-2.5-flash-lite")
                     response = model.generate_content(prompt)
                     text = response.text
-
                     st.markdown("<div class='info-card'><h4>✅ Diagnosis Report</h4></div>", unsafe_allow_html=True)
-                    sections = re.split(r'(?=🔹)', text)
-
-                    for sec in sections:
+                    for sec in re.split(r'(?=🔹)', text):
                         sec = sec.strip()
                         if sec:
                             st.markdown(f"<div class='diagnosis-card'>{sec}</div>", unsafe_allow_html=True)
-
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
