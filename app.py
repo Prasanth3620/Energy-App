@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import google.generativeai as genai
 import re
- 
+
 # ================================================
 # Streamlit Page Setup
 # ================================================
@@ -11,7 +11,7 @@ st.set_page_config(
     page_title="⚡ Energy Vision",
     layout="wide",
 )
- 
+
 # -----------------------------------------
 # Custom CSS for styling
 # -----------------------------------------
@@ -116,32 +116,31 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
- 
+
 # ================================================
 # HEADER
 # ================================================
 st.markdown("<h1 class='main-title'>⚡ Energy Vision</h1>", unsafe_allow_html=True)
 st.markdown("<h3 class='subtitle'>Your Personal Energy & Appliance Consultant</h3>", unsafe_allow_html=True)
- 
+
 # Add extra vertical space below header
 st.markdown("<div class='header-space'></div>", unsafe_allow_html=True)
- 
- 
+
 # Create two sections side by side
 left_col, divider_col, right_col = st.columns([1, 0.05, 1])
- 
+
 # ====================================================
 # LEFT SIDE → ENERGY INSIGHTS
 # ====================================================
 with left_col:
     st.markdown("<h3 class='section-header'>🌞 Today's Energy Saving Tip</h3>", unsafe_allow_html=True)
- 
+
     @st.cache_data
     def load_tips():
         return pd.read_excel("energy_tips_with_alert3.xlsx")
- 
+
     df = load_tips()
- 
+
     def fetch_weather_from_pincode(pincode: str):
         geo_url = "https://nominatim.openstreetmap.org/search"
         g = requests.get(
@@ -162,7 +161,7 @@ with left_col:
         loc = gdata[0]
         lat, lon = float(loc["lat"]), float(loc["lon"])
         display_name = loc.get("display_name", "Unknown Location")
- 
+
         wx_url = "https://api.open-meteo.com/v1/forecast"
         r = requests.get(wx_url, params={
             "latitude": lat,
@@ -177,7 +176,7 @@ with left_col:
         if "hourly" in data and "relative_humidity_2m" in data["hourly"]:
             humidity = data["hourly"]["relative_humidity_2m"][0]
         return {"temp_c": temp, "humidity": humidity, "place": display_name}
- 
+
     def match_prompt(forecast, df):
         temp, hum = forecast["temp_c"], forecast["humidity"]
         if temp is None or hum is None:
@@ -185,60 +184,63 @@ with left_col:
         df_temp = df.copy()
         df_temp["distance"] = ((df_temp["Temperature (°C)"] - temp)**2 + (df_temp["Humidity (%)"] - hum)**2) ** 0.5
         return df_temp.loc[df_temp["distance"].idxmin()]
- 
+
     with st.container():
-     col1, col2 = st.columns([0.5, 0.5])  # half-width layout
-     with col1:
-        pincode = st.text_input("Enter your PIN Code", placeholder="e.g. 560001")
-     # Optional: leave col2 empty for spacing
-
-     if st.button("🔍 Get Today's Insights", use_container_width=True):
-        if not pincode:
-            st.error("Please enter a valid PIN code.")
-        else:
-            try:
-                forecast = fetch_weather_from_pincode(pincode)
-                st.markdown(f"<div class='info-card'><b>📍 Location:</b> {forecast['place']}<br>🌡️ <b>Temperature:</b> {forecast['temp_c']}°C<br>💧 <b>Humidity:</b> {forecast['humidity']}%</div>", unsafe_allow_html=True)
-                row = match_prompt(forecast, df)
-                if row is not None:
-                    st.markdown("<div class='info-card'><b>💡 Energy Tips:</b></div>", unsafe_allow_html=True)
-                    st.success(f"🔹 {row['Alert 1']}")
-                    st.info(f"🔹 {row['Alert 2']}")
-                    st.info(f"🔹 {row['Alert 3']}")
+        # Half-width input + button
+        col1, col2 = st.columns([0.5, 0.5])
+        with col1:
+            pincode = st.text_input("Enter your PIN Code", placeholder="e.g. 560001")
+            if st.button("🔍 Get Today's Insights", use_container_width=True):
+                if not pincode:
+                    st.error("Please enter a valid PIN code.")
                 else:
-                    st.warning("No matching condition found in the tips sheet.")
-            except Exception as e:
-                st.error(f"Error: {e}")
+                    try:
+                        forecast = fetch_weather_from_pincode(pincode)
+                        st.markdown(f"<div class='info-card'><b>📍 Location:</b> {forecast['place']}<br>🌡️ <b>Temperature:</b> {forecast['temp_c']}°C<br>💧 <b>Humidity:</b> {forecast['humidity']}%</div>", unsafe_allow_html=True)
+                        row = match_prompt(forecast, df)
+                        if row is not None:
+                            st.markdown("<div class='info-card'><b>💡 Energy Tips:</b></div>", unsafe_allow_html=True)
+                            st.success(f"🔹 {row['Alert 1']}")
+                            st.info(f"🔹 {row['Alert 2']}")
+                            st.info(f"🔹 {row['Alert 3']}")
+                        else:
+                            st.warning("No matching condition found in the tips sheet.")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
 
- 
 # ====================================================
 # DIVIDER
 # ====================================================
 with divider_col:
     st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+
 # ====================================================
 # RIGHT SIDE → APPLIANCE DIAGNOSTIC
 # ====================================================
 with right_col:
     st.markdown("<h3 class='section-header'>🔧 Appliance Diagnostic Assistant</h3>", unsafe_allow_html=True)
     st.markdown("Describe the issue to get quick troubleshooting guidance.")
- 
+
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
- 
+
     with st.form("diagnostic_form"):
-     # Two columns for half-width inputs
-     col1, col2 = st.columns([0.5, 0.5])
-     with col1:
-        model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA")
-     with col2:
-        display_error = st.text_input("Error Code (Optional)", placeholder="e.g. E4, F07, etc.")
+        # Half-width model + error code
+        col1, col2 = st.columns([0.5, 0.5])
+        with col1:
+            model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA")
+        with col2:
+            display_error = st.text_input("Error Code (Optional)", placeholder="e.g. E4, F07, etc.")
 
-     # Full-width textarea (can also make half if desired)
-     issue = st.text_area("Describe the Issue", placeholder="e.g. No display, making noise...")
+        # Half-width issue description
+        col1, col2 = st.columns([0.5, 0.5])
+        with col1:
+            issue = st.text_area("Describe the Issue", placeholder="e.g. No display, making noise...")
 
-     submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
+        # Half-width submit button
+        col1, col2 = st.columns([0.5, 0.5])
+        with col1:
+            submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
 
- 
     if submitted:
         if not model_name or not issue:
             st.warning("Please fill in the required fields.")
@@ -249,17 +251,17 @@ You are an intelligent appliance diagnostic assistant.
 Model Number: {model_name}
 Issue: {issue}
 Error Code: {display_error or 'Not provided'}
- 
+
 Tasks:
 1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
 2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
- 
+
    🔹 Quick Checks / Self-Diagnosis  
    • Give 2–3 simple user-level checks to perform before calling a technician.
- 
+
    🔹 Customer Care Number  
    • Give the official customer care helpline number for the brand.
- 
+
    🔹 Probable Causes & Estimated Costs  
    • Mention 2–3 possible technical causes (just name them, no explanations).  
    • Add approximate cost range in INR for each cause.  
@@ -268,26 +270,26 @@ Tasks:
      Column 2: “Estimated Cost (INR Range)”.  
    • Do not include markdown symbols like |, *, or #.  
    • Use simple spacing to make it look like a neat table.
- 
+
    🔹 Turnaround Time (TAT)  
    • Mention the realistic average service time in days.
- 
+
 Formatting Instructions:
 - Each section heading should start with a blue diamond (🔹).
 - Each point should start with a small black dot (•) except inside the table.
 - Keep response short, well-structured, and visually clean.
 - Avoid unnecessary text or explanations.
 """
- 
+
                 try:
                     model = genai.GenerativeModel("gemini-2.5-flash-lite")
                     response = model.generate_content(prompt)
                     text = response.text
- 
+
                     st.markdown("<div class='info-card'><h4>✅ Diagnosis Report</h4></div>", unsafe_allow_html=True)
                     sections = re.split(r'(?=🔹)', text)
                     colors = ["#007ACC", "#008CBA", "#006C77", "#005577"]
- 
+
                     for i, sec in enumerate(sections):
                         sec = sec.strip()
                         if sec:
