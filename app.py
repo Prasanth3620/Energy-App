@@ -17,125 +17,103 @@ st.set_page_config(
 # -----------------------------------------
 st.markdown("""
 <style>
-/* --- TESLA DARK UI --- */
-body, .stApp {
-    background: linear-gradient(145deg, #0B0C0D 0%, #101214 100%);
-    color: #E5E5E5;
-    font-family: 'Inter', 'Segoe UI', sans-serif;
-}
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: linear-gradient(to bottom, #D6E1F0, #C5D4E7);
+        color: #0D1B2A;
+    }
 
-/* Main title */
-.main-title {
-    color: #FFFFFF;
-    text-align: center;
-    font-size: 2.8em;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.3rem;
-}
+    .main-title {
+        color: #005FE6;
+        text-align: center;
+        font-size: 3em;
+        font-weight: 700;
+        text-shadow: 0 1px 10px rgba(0, 95, 230, 0.25);
+        margin-bottom: 0.3rem;
+    }
 
-.subtitle {
-    color: #A0A0A0;
-    text-align: center;
-    font-size: 1.1em;
-    margin-bottom: 2.5rem;
-}
+    .subtitle {
+        color: #3F4E61;
+        text-align: center;
+        font-size: 1.3em;
+        margin-bottom: 2.5rem;
+    }
 
-/* Section headers */
-.section-header {
-    color: #E5E5E5;
-    font-size: 1.4em;
-    font-weight: 600;
-    margin-top: 1.2rem;
-    letter-spacing: 0.3px;
-}
+    .section-header {
+        color: #005FE6;
+        font-size: 1.6em;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
 
-/* Info cards */
-.info-card {
-    background: #161718;
-    border-radius: 16px;
-    padding: 1.3rem;
-    margin-bottom: 1.4rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-    transition: all 0.2s ease;
-}
-.info-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.75);
-}
+    .info-card {
+        background: linear-gradient(135deg, #E3E9F4, #D8E1F2);
+        border-radius: 18px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(0, 95, 230, 0.15);
+    }
 
-/* --- Tesla Button Style --- */
-div.stButton > button {
-    background: #1A1B1D !important;
-    color: #EAEAEA !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 14px !important;
-    font-weight: 600 !important;
-    font-size: 0.95rem !important;
-    padding: 0.7rem 1.2rem !important;
-    box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.03),
-                0 2px 6px rgba(0, 0, 0, 0.6);
-    transition: all 0.25s ease-in-out;
-}
+    .divider {
+        border-left: 2px solid rgba(0, 0, 0, 0.1);
+        height: 100%;
+        margin: auto;
+    }
 
-/* Hover = subtle brightness */
-div.stButton > button:hover {
-    background: #222325 !important;
-    border-color: rgba(255, 255, 255, 0.12) !important;
-    transform: scale(1.02);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.06);
-}
+    div.stButton > button {
+        background: linear-gradient(135deg, #005FE6, #007FFF) !important;
+        color: white !important;
+        border: none;
+        border-radius: 12px;
+        padding: 0.6rem 1.2rem;
+        font-weight: 600;
+        font-size: 1rem;
+        box-shadow: 0 3px 10px rgba(0, 95, 230, 0.4);
+        transition: all 0.2s ease-in-out;
+    }
 
-/* Active = Tesla teal glow */
-div.stButton > button:active, div.stButton > button:focus {
-    background: #0F1415 !important;
-    border-color: #00C2A8 !important;
-    color: #00C2A8 !important;
-    box-shadow: 0 0 18px rgba(0, 194, 168, 0.45);
-    transform: scale(1.03);
-}
+    div.stButton > button:hover {
+        background: linear-gradient(135deg, #007FFF, #33A0FF) !important;
+        transform: scale(1.03);
+        box-shadow: 0 5px 14px rgba(0, 95, 230, 0.45);
+    }
 
-/* Optional: glowing animation for "active" state */
-@keyframes teslaGlow {
-    0% { box-shadow: 0 0 8px rgba(0,194,168,0.2); }
-    50% { box-shadow: 0 0 16px rgba(0,194,168,0.45); }
-    100% { box-shadow: 0 0 8px rgba(0,194,168,0.2); }
-}
-.glow-active {
-    animation: teslaGlow 2.5s infinite ease-in-out;
-    color: #00C2A8 !important;
-    border-color: #00C2A8 !important;
-}
+    .stSuccess, .stInfo, .stWarning {
+        border-radius: 12px !important;
+        padding: 0.8rem !important;
+        background-color: #E3E9F4 !important;
+        color: #003366 !important;
+        border: 1px solid rgba(0, 95, 230, 0.15) !important;
+    }
 
-/* Input Fields */
-.stTextInput > div > div > input, textarea {
-    background: #151617 !important;
-    border: 1px solid rgba(255,255,255,0.06) !important;
-    border-radius: 10px !important;
-    color: #E5E5E5 !important;
-    transition: all 0.25s ease;
-}
-.stTextInput > div > div > input:focus {
-    border-color: #00C2A8 !important;
-    box-shadow: 0 0 10px rgba(0,194,168,0.3);
-}
+    div[data-testid="stMarkdownContainer"] > div[style*="background-color"] {
+        border-radius: 16px !important;
+        background: linear-gradient(135deg, #E3E9F4, #D8E1F2) !important;
+        color: #002B5C !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    }
 
-/* Status/info containers */
-.stSuccess, .stInfo, .stWarning {
-    border-radius: 12px !important;
-    padding: 0.9rem !important;
-    background-color: #161718 !important;
-    border: 1px solid rgba(255,255,255,0.07) !important;
-    color: #C9D3D6 !important;
-}
+    .header-space {
+        height: 80px;
+        background: linear-gradient(to bottom, rgba(0,95,230,0.1), rgba(255,255,255,0));
+    }
 
-/* Divider */
-.divider {
-    border-left: 2px solid rgba(255,255,255,0.07);
-    height: 100%;
-    margin: auto;
-}
+    .stTextInput > div > div > input, textarea {
+        background: #FFFFFF !important;
+        border: 1px solid rgba(0,95,230,0.3) !important;
+        border-radius: 10px !important;
+        color: #0D1B2A !important;
+    }
+
+    label {
+        color: #003366 !important;
+        font-weight: 500 !important;
+    }
+
+    .stApp {
+        background: linear-gradient(to bottom, #D6E1F0, #C5D4E7);
+    }
 </style>
 """, unsafe_allow_html=True)
  
