@@ -26,7 +26,7 @@ st.markdown("""
     .main-title {
         color: #005FE6;
         text-align: center;
-        font-size: 3em;
+        font-size: 2.5em;
         font-weight: 700;
         text-shadow: 0 1px 10px rgba(0, 95, 230, 0.25);
         margin-bottom: 0.3rem;
