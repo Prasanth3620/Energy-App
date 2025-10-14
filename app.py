@@ -3,8 +3,8 @@ import requests
 import pandas as pd
 import google.generativeai as genai
 import re
-
-
+import json
+import os
 
 # ================================================
 # Streamlit Page Setup
@@ -14,10 +14,29 @@ st.set_page_config(
     layout="wide",
 )
 
+# ================================================
+# CLICK TRACKER
+# ================================================
+def update_click_count(key):
+    filename = "click_counts.json"
 
-# -----------------------------------------
+    # Load or create file
+    if os.path.exists(filename):
+        with open(filename, "r") as f:
+            data = json.load(f)
+    else:
+        data = {"insight_clicks": 0, "diagnostic_clicks": 0}
+
+    # Increment
+    data[key] += 1
+
+    # Save back
+    with open(filename, "w") as f:
+        json.dump(data, f)
+
+# ================================================
 # Custom CSS for styling
-# -----------------------------------------
+# ================================================
 st.markdown("""
 <style>
     body {
@@ -82,36 +101,9 @@ st.markdown("""
         box-shadow: 0 5px 14px rgba(0, 95, 230, 0.45);
     }
 
-    .stSuccess, .stInfo, .stWarning {
-        border-radius: 12px !important;
-        padding: 0.8rem !important;
-        background-color: #E3E9F4 !important;
-        color: #003366 !important;
-        border: 1px solid rgba(0, 95, 230, 0.15) !important;
-    }
-
-    div[data-testid="stMarkdownContainer"] > div[style*="background-color"] {
-        border-radius: 16px !important;
-        background: linear-gradient(135deg, #E3E9F4, #D8E1F2) !important;
-        color: #002B5C !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-    }
-
     .header-space {
         height: 80px;
         background: linear-gradient(to bottom, rgba(0,95,230,0.1), rgba(255,255,255,0));
-    }
-
-    .stTextInput > div > div > input, textarea {
-        background: #FFFFFF !important;
-        border: 1px solid rgba(0,95,230,0.3) !important;
-        border-radius: 10px !important;
-        color: #0D1B2A !important;
-    }
-
-    label {
-        color: #003366 !important;
-        font-weight: 500 !important;
     }
 
     .stApp {
@@ -125,11 +117,11 @@ st.markdown("""
 # ================================================
 st.markdown("<h1 class='main-title'>⚡ Energy Vision</h1>", unsafe_allow_html=True)
 st.markdown("<h3 class='subtitle'>Your Personal Energy & Appliance Consultant</h3>", unsafe_allow_html=True)
-
-# Add extra vertical space below header
 st.markdown("<div class='header-space'></div>", unsafe_allow_html=True)
 
-# Create two sections side by side
+# ================================================
+# MAIN COLUMNS
+# ================================================
 left_col, divider_col, right_col = st.columns([1, 0.05, 1])
 
 # ====================================================
@@ -189,12 +181,11 @@ with left_col:
         return df_temp.loc[df_temp["distance"].idxmin()]
 
     with st.container():
-        # Half-width input + button
         col1, col2 = st.columns([0.5, 0.5])
         with col1:
             pincode = st.text_input("Enter your PIN Code", placeholder="e.g. 560001")
             if st.button("🔍 Get Today's Insights", use_container_width=True):
-               
+                update_click_count("insight_clicks")  # Track click
                 if not pincode:
                     st.error("Please enter a valid PIN code.")
                 else:
@@ -228,25 +219,23 @@ with right_col:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
     with st.form("diagnostic_form"):
-        # Half-width model + error code
         col1, col2 = st.columns([0.5, 0.5])
         with col1:
             model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA")
         with col2:
             display_error = st.text_input("Error Code (Optional)", placeholder="e.g. E4, F07, etc.")
 
-        # Half-width issue description
         col1, col2 = st.columns([0.5, 0.5])
         with col1:
             issue = st.text_area("Describe the Issue", placeholder="e.g. No display, making noise...")
 
-        # Half-width submit button
         col1, col2 = st.columns([0.5, 0.5])
         with col1:
             submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
 
     if submitted:
-        
+        update_click_count("diagnostic_clicks")  # Track click
+
         if not model_name or not issue:
             st.warning("Please fill in the required fields.")
         else:
@@ -258,32 +247,12 @@ Issue: {issue}
 Error Code: {display_error or 'Not provided'}
 
 Tasks:
-1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
-2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
-
+1. Identify the appliance brand and type.
+2. Generate a diagnostic report with sections:
    🔹 Quick Checks / Self-Diagnosis  
-   • Give 2–3 simple user-level checks to perform before calling a technician.
-
    🔹 Customer Care Number  
-   • Give the official customer care helpline number for the brand.
-
-   🔹 Probable Causes & Estimated Costs  
-   • Mention 2–3 possible technical causes (just name them, no explanations).  
-   • Add approximate cost range in INR for each cause.  
-   • Present this section **strictly as a clean 2-column table** —  
-     Column 1: “Probable Cause”  
-     Column 2: “Estimated Cost (INR Range)”.  
-   • Do not include markdown symbols like |, *, or #.  
-   • Use simple spacing to make it look like a neat table.
-
-   🔹 Turnaround Time (TAT)  
-   • Mention the realistic average service time in days.
-
-Formatting Instructions:
-- Each section heading should start with a blue diamond (🔹).
-- Each point should start with a small black dot (•) except inside the table.
-- Keep response short, well-structured, and visually clean.
-- Avoid unnecessary text or explanations.
+   🔹 Probable Causes & Estimated Costs (table)
+   🔹 Turnaround Time (TAT)
 """
 
                 try:
@@ -298,8 +267,7 @@ Formatting Instructions:
                     for i, sec in enumerate(sections):
                         sec = sec.strip()
                         if sec:
-                            sec_html = re.sub(r'^\s*[-*]\s+', '• ', sec, flags=re.MULTILINE)
-                            sec_html = sec_html.replace('\n', '<br>')
+                            sec_html = sec.replace('\n', '<br>')
                             st.markdown(
                                 f"""
 <div style="
@@ -317,3 +285,15 @@ Formatting Instructions:
                             )
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
+
+# ================================================
+# SIDEBAR STATS
+# ================================================
+st.sidebar.title("📊 Click Tracker")
+if os.path.exists("click_counts.json"):
+    with open("click_counts.json", "r") as f:
+        data = json.load(f)
+    st.sidebar.write(f"🔹 Insights Clicks: {data['insight_clicks']}")
+    st.sidebar.write(f"🔹 Diagnostic Clicks: {data['diagnostic_clicks']}")
+else:
+    st.sidebar.info("No clicks recorded yet.")
