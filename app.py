@@ -297,3 +297,13 @@ if os.path.exists("click_counts.json"):
     st.sidebar.write(f"🔹 Diagnostic Clicks: {data['diagnostic_clicks']}")
 else:
     st.sidebar.info("No clicks recorded yet.")
+
+# ====================================================
+# DISCLAIMER
+# ====================================================
+st.markdown("---")
+st.markdown(
+    "<p style='text-align:center; color: #555555; font-size: 0.9rem;'>⚠️ Disclaimer: The factuality of the responses may not be precise as they are LLM-generated responses.</p>",
+    unsafe_allow_html=True
+)
+
