@@ -4,6 +4,45 @@ import pandas as pd
 import google.generativeai as genai
 import re
 
+from fastapi import FastAPI
+from pydantic import BaseModel
+import json, os
+
+app = FastAPI()
+
+FILE_PATH = "click_counts.json"
+
+# Ensure file exists
+if not os.path.exists(FILE_PATH):
+    with open(FILE_PATH, "w") as f:
+        json.dump({"insight_clicks": 0, "diagnostic_clicks": 0}, f)
+
+class ClickEvent(BaseModel):
+    button_type: str
+
+
+@app.post("/log_click")
+def log_click(event: ClickEvent):
+    """Log button clicks from Streamlit"""
+    with open(FILE_PATH, "r") as f:
+        data = json.load(f)
+
+    if event.button_type not in data:
+        data[event.button_type] = 0
+    data[event.button_type] += 1
+
+    with open(FILE_PATH, "w") as f:
+        json.dump(data, f)
+
+    return {"message": "Click logged successfully", "counts": data}
+
+
+@app.get("/click_stats")
+def click_stats():
+    """Return total click counts"""
+    with open(FILE_PATH, "r") as f:
+        data = json.load(f)
+    return data
 
 # ================================================
 # Streamlit Page Setup
@@ -12,6 +51,16 @@ st.set_page_config(
     page_title="⚡ Energy Vision",
     layout="wide",
 )
+st.sidebar.header("📊 Usage Stats")
+try:
+    res = requests.get("https://energy-backend.onrender.com/click_stats")
+    if res.status_code == 200:
+        data = res.json()
+        st.sidebar.write(f"🔍 Energy Insights Clicks: {data['insight_clicks']}")
+        st.sidebar.write(f"🩺 Diagnostic Clicks: {data['diagnostic_clicks']}")
+except:
+    st.sidebar.warning("⚠️ Unable to fetch usage data.")
+
 
 # -----------------------------------------
 # Custom CSS for styling
@@ -192,6 +241,7 @@ with left_col:
         with col1:
             pincode = st.text_input("Enter your PIN Code", placeholder="e.g. 560001")
             if st.button("🔍 Get Today's Insights", use_container_width=True):
+                requests.post("https://energy-backend.onrender.com/log_click", json={"button_type": "insight_clicks"})
                 if not pincode:
                     st.error("Please enter a valid PIN code.")
                 else:
@@ -243,6 +293,7 @@ with right_col:
             submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
 
     if submitted:
+        requests.post("https://energy-backend.onrender.com/log_click", json={"button_type": "diagnostic_clicks"})
         if not model_name or not issue:
             st.warning("Please fill in the required fields.")
         else:
