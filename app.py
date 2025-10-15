@@ -5,6 +5,14 @@ import google.generativeai as genai
 import re
 import json
 import os
+import psycopg2
+
+def get_connection():
+    return psycopg2.connect(os.environ["DATABASE_URL"])
+
+conn = get_connection()
+cursor = conn.cursor()
+
 
 # ================================================
 # Streamlit Page Setup
