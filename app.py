@@ -5,6 +5,16 @@ import google.generativeai as genai
 import re
 import json
 import os
+import psycopg2
+
+# ------------------------
+# Database connection
+# ------------------------
+def get_connection():
+    return psycopg2.connect(os.environ["Internal_Database_URL"])
+
+conn = get_connection()
+cursor = conn.cursor()
 
 # ------------------------
 # Streamlit Page Setup
@@ -15,34 +25,18 @@ st.set_page_config(
 )
 
 # ------------------------
-# File Paths
-# ------------------------
-ENERGY_CSV = "energy_requests.csv"
-SERVICE_CSV = "service_requests.csv"
-CLICK_FILE = "click_counts.json"
-
-# ------------------------
 # Click Tracker
 # ------------------------
 def update_click_count(key):
-    if os.path.exists(CLICK_FILE):
-        with open(CLICK_FILE, "r") as f:
+    filename = "click_counts.json"
+    if os.path.exists(filename):
+        with open(filename, "r") as f:
             data = json.load(f)
     else:
         data = {"insight_clicks": 0, "diagnostic_clicks": 0}
     data[key] += 1
-    with open(CLICK_FILE, "w") as f:
+    with open(filename, "w") as f:
         json.dump(data, f)
-
-# ------------------------
-# Save to CSV Helper
-# ------------------------
-def save_to_csv(filename, row):
-    df_new = pd.DataFrame([row])
-    if os.path.exists(filename):
-        df_new.to_csv(filename, mode="a", index=False, header=False)
-    else:
-        df_new.to_csv(filename, index=False)
 
 # ------------------------
 # Custom CSS Styling
@@ -58,6 +52,7 @@ st.markdown("""
     div.stButton > button { background: linear-gradient(135deg, #005FE6, #007FFF) !important; color: white !important; border: none; border-radius: 12px; padding: 0.6rem 1.2rem; font-weight: 600; font-size: 1rem; box-shadow: 0 3px 10px rgba(0, 95, 230, 0.4); transition: all 0.2s ease-in-out; }
     div.stButton > button:hover { background: linear-gradient(135deg, #007FFF, #33A0FF) !important; transform: scale(1.03); box-shadow: 0 5px 14px rgba(0, 95, 230, 0.45); }
     .header-space { height: 80px; background: linear-gradient(to bottom, rgba(0,95,230,0.1), rgba(255,255,255,0)); }
+    .stApp { background: linear-gradient(to bottom, #D6E1F0, #C5D4E7); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -69,12 +64,12 @@ st.markdown("<h3 class='subtitle'>Your Personal Energy & Appliance Consultant</h
 st.markdown("<div class='header-space'></div>", unsafe_allow_html=True)
 
 # ------------------------
-# Layout
+# Main Columns
 # ------------------------
 left_col, divider_col, right_col = st.columns([1, 0.05, 1])
 
 # ------------------------
-# LEFT SIDE → Energy Insights
+# LEFT SIDE → ENERGY INSIGHTS
 # ------------------------
 with left_col:
     st.markdown("<h3 class='section-header'>🌞 Today's Energy Saving Tip</h3>", unsafe_allow_html=True)
@@ -96,56 +91,79 @@ with left_col:
         g.raise_for_status()
         gdata = g.json()
         if not gdata:
-            raise ValueError("Invalid PIN code.")
+            raise ValueError(f"No location found for PIN code {pincode}")
         loc = gdata[0]
         lat, lon = float(loc["lat"]), float(loc["lon"])
         display_name = loc.get("display_name", "Unknown Location")
         wx_url = "https://api.open-meteo.com/v1/forecast"
-        r = requests.get(wx_url, params={"latitude": lat, "longitude": lon, "current_weather": True}, timeout=10)
+        r = requests.get(wx_url, params={"latitude": lat, "longitude": lon, "current_weather": True, "hourly": "temperature_2m,relative_humidity_2m"}, timeout=10)
         r.raise_for_status()
         data = r.json()
         temp = data.get("current_weather", {}).get("temperature")
-        return {"temp_c": temp, "place": display_name}
+        humidity = None
+        if "hourly" in data and "relative_humidity_2m" in data["hourly"]:
+            humidity = data["hourly"]["relative_humidity_2m"][0]
+        return {"temp_c": temp, "humidity": humidity, "place": display_name}
 
     def match_prompt(forecast, df):
-        temp = forecast["temp_c"]
-        df["distance"] = abs(df["Temperature (°C)"] - temp)
-        return df.loc[df["distance"].idxmin()]
+        temp, hum = forecast["temp_c"], forecast["humidity"]
+        if temp is None or hum is None:
+            return None
+        df_temp = df.copy()
+        df_temp["distance"] = ((df_temp["Temperature (°C)"] - temp)**2 + (df_temp["Humidity (%)"] - hum)**2) ** 0.5
+        return df_temp.loc[df_temp["distance"].idxmin()]
 
-    pincode = st.text_input("Enter your PIN Code", placeholder="e.g. 560001")
-    if st.button("🔍 Get Today's Insights", use_container_width=True):
-        update_click_count("insight_clicks")
-        if not pincode:
-            st.error("Please enter a valid PIN code.")
-        else:
-            try:
-                forecast = fetch_weather_from_pincode(pincode)
-                st.markdown(f"<div class='info-card'><b>📍 Location:</b> {forecast['place']}<br>🌡️ Temperature: {forecast['temp_c']}°C</div>", unsafe_allow_html=True)
-                row = match_prompt(forecast, df)
-                st.success(f"💡 {row['Alert 1']}")
-                st.info(f"🔹 {row['Alert 2']}")
-                st.info(f"🔹 {row['Alert 3']}")
-                save_to_csv(ENERGY_CSV, {"pincode": pincode, "temperature": forecast["temp_c"], "location": forecast["place"]})
-            except Exception as e:
-                st.error(f"Error: {e}")
+    with st.container():
+        col1, col2 = st.columns([0.5, 0.5])
+        with col1:
+            pincode = st.text_input("Enter your PIN Code", placeholder="e.g. 560001")
+            if st.button("🔍 Get Today's Insights", use_container_width=True):
+                update_click_count("insight_clicks")
+                if not pincode:
+                    st.error("Please enter a valid PIN code.")
+                else:
+                    try:
+                        forecast = fetch_weather_from_pincode(pincode)
+                        st.markdown(f"<div class='info-card'><b>📍 Location:</b> {forecast['place']}<br>🌡️ <b>Temperature:</b> {forecast['temp_c']}°C<br>💧 <b>Humidity:</b> {forecast['humidity']}%</div>", unsafe_allow_html=True)
+                        row = match_prompt(forecast, df)
+                        if row is not None:
+                            st.markdown("<div class='info-card'><b>💡 Energy Tips:</b></div>", unsafe_allow_html=True)
+                            st.success(f"🔹 {row['Alert 1']}")
+                            st.info(f"🔹 {row['Alert 2']}")
+                            st.info(f"🔹 {row['Alert 3']}")
+                        else:
+                            st.warning("No matching condition found in the tips sheet.")
+                        # Save request to DB
+                        try:
+                            cursor.execute(
+                                "INSERT INTO energy_requests (pincode, temperature, humidity) VALUES (%s, %s, %s)",
+                                (pincode, forecast['temp_c'], forecast['humidity'])
+                            )
+                            conn.commit()
+                        except Exception as e:
+                            st.error(f"❌ Database Error: {e}")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
 
-    # Password-protected view
+    # --- Password-protected Energy Requests ---
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<h4>📂 Previous Energy Requests</h4>", unsafe_allow_html=True)
     password_input = st.text_input("Enter password to view/download energy requests", type="password", key="energy_pass")
-
-    if password_input == os.environ.get("DATA_PASSWORD", "admin123"):
-        if os.path.exists(ENERGY_CSV):
-            df_energy = pd.read_csv(ENERGY_CSV)
-            st.dataframe(df_energy, use_container_width=True)
-            st.download_button(
-                label="⬇️ Download All Energy Entries as CSV",
-                data=df_energy.to_csv(index=False).encode("utf-8"),
-                file_name="energy_requests.csv",
-                mime="text/csv"
-            )
-        else:
-            st.info("No energy requests recorded yet.")
+    if password_input == os.environ["DATA_PASSWORD"]:
+        try:
+            df_energy = pd.read_sql("SELECT * FROM energy_requests ORDER BY timestamp DESC", conn)
+            if not df_energy.empty:
+                st.dataframe(df_energy, use_container_width=True)
+                st.download_button(
+                    label="⬇️ Download All Energy Entries as CSV",
+                    data=df_energy.to_csv(index=False).encode("utf-8"),
+                    file_name="energy_requests.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.info("No energy requests recorded yet.")
+        except Exception as e:
+            st.error(f"❌ Could not fetch energy requests: {e}")
     elif password_input:
         st.error("❌ Incorrect password")
 
@@ -156,7 +174,7 @@ with divider_col:
     st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 # ------------------------
-# RIGHT SIDE → Appliance Diagnostic
+# RIGHT SIDE → APPLIANCE DIAGNOSTIC
 # ------------------------
 with right_col:
     st.markdown("<h3 class='section-header'>🔧 Appliance Diagnostic Assistant</h3>", unsafe_allow_html=True)
@@ -164,52 +182,103 @@ with right_col:
 
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
-    model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z")
-    display_error = st.text_input("Error Code (Optional)", placeholder="e.g. E4, F07")
-    issue = st.text_area("Describe the Issue", placeholder="e.g. No display, making noise...")
+    with st.form("diagnostic_form"):
+        col1, col2 = st.columns([0.5, 0.5])
+        with col1:
+            model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA")
+        with col2:
+            display_error = st.text_input("Error Code (Optional)", placeholder="e.g. E4, F07, etc.")
 
-    if st.button("🩺 Diagnose", use_container_width=True):
+        col1, col2 = st.columns([0.5, 0.5])
+        with col1:
+            issue = st.text_area("Describe the Issue", placeholder="e.g. No display, making noise...")
+
+        col1, col2 = st.columns([0.5, 0.5])
+        with col1:
+            submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
+
+    if submitted:
         update_click_count("diagnostic_clicks")
         if not model_name or not issue:
             st.warning("Please fill in the required fields.")
         else:
             with st.spinner("Analyzing the issue..."):
-                prompt = f"Model: {model_name}\nIssue: {issue}\nError: {display_error or 'None'}"
+                prompt = f"""
+You are an intelligent appliance diagnostic assistant.
+Model Number: {model_name}
+Issue: {issue}
+Error Code: {display_error or 'Not provided'}
+
+Tasks:
+1. Identify the appliance brand and type.
+2. Generate a diagnostic report with sections:
+   🔹 Quick Checks / Self-Diagnosis  
+   🔹 Customer Care Number  
+   🔹 Probable Causes & Estimated Costs (table)
+   🔹 Turnaround Time (TAT)
+"""
                 try:
                     model = genai.GenerativeModel("gemini-2.5-flash-lite")
                     response = model.generate_content(prompt)
+                    text = response.text
                     st.markdown("<div class='info-card'><h4>✅ Diagnosis Report</h4></div>", unsafe_allow_html=True)
-                    st.write(response.text)
-                    save_to_csv(SERVICE_CSV, {"model_name": model_name, "error_code": display_error, "issue": issue})
+                    sections = re.split(r'(?=🔹)', text)
+                    colors = ["#007ACC", "#008CBA", "#006C77", "#005577"]
+                    for i, sec in enumerate(sections):
+                        sec = sec.strip()
+                        if sec:
+                            sec_html = sec.replace('\n', '<br>')
+                            st.markdown(f"""
+<div style="
+    background-color:{colors[i % len(colors)]};
+    color:#FFFFFF;
+    padding:1.2rem;
+    border-radius:12px;
+    margin-bottom:1rem;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+">
+{sec_html}
+</div>""", unsafe_allow_html=True)
+                    # Save to DB
+                    try:
+                        cursor.execute(
+                            "INSERT INTO service_requests (model_name, error_code, issue) VALUES (%s, %s, %s)",
+                            (model_name, display_error, issue)
+                        )
+                        conn.commit()
+                    except Exception as e:
+                        st.error(f"❌ Database Error: {e}")
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
 
-    # Password-protected section
+    # --- Password-protected Diagnostic Entries ---
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<h4>📂 Previous Diagnostic Entries</h4>", unsafe_allow_html=True)
     password_input2 = st.text_input("Enter password to view/download diagnostic entries", type="password", key="diag_pass")
-
-    if password_input2 == os.environ.get("DATA_PASSWORD", "admin123"):
-        if os.path.exists(SERVICE_CSV):
-            df_service = pd.read_csv(SERVICE_CSV)
-            st.dataframe(df_service, use_container_width=True)
-            st.download_button(
-                label="⬇️ Download All Diagnostic Entries as CSV",
-                data=df_service.to_csv(index=False).encode("utf-8"),
-                file_name="service_requests.csv",
-                mime="text/csv"
-            )
-        else:
-            st.info("No diagnostic entries recorded yet.")
+    if password_input2 == os.environ["DATA_PASSWORD"]:
+        try:
+            df_db = pd.read_sql("SELECT * FROM service_requests ORDER BY timestamp DESC", conn)
+            if not df_db.empty:
+                st.dataframe(df_db, use_container_width=True)
+                st.download_button(
+                    label="⬇️ Download All Entries as CSV",
+                    data=df_db.to_csv(index=False).encode("utf-8"),
+                    file_name="service_requests.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.info("No diagnostic entries recorded yet.")
+        except Exception as e:
+            st.error(f"❌ Could not fetch database records: {e}")
     elif password_input2:
         st.error("❌ Incorrect password")
 
 # ------------------------
-# Sidebar Tracker
+# Sidebar Click Tracker
 # ------------------------
 st.sidebar.title("📊 Click Tracker")
-if os.path.exists(CLICK_FILE):
-    with open(CLICK_FILE, "r") as f:
+if os.path.exists("click_counts.json"):
+    with open("click_counts.json", "r") as f:
         data = json.load(f)
     st.sidebar.write(f"🔹 Insights Clicks: {data['insight_clicks']}")
     st.sidebar.write(f"🔹 Diagnostic Clicks: {data['diagnostic_clicks']}")
@@ -221,6 +290,6 @@ else:
 # ------------------------
 st.markdown("---")
 st.markdown(
-    "<p style='text-align:center; color: #555555; font-size: 0.9rem;'>⚠️ Disclaimer: The factuality of the responses may not be precise as they are LLM-generated responses.</p>",
+    "<p style='text-align:center; color: #555555; font-size: 0.9rem;'>⚠️ Disclaimer: The factuality of the responses may not be precise as they are LLM-generated responses. Please share your feedback with us.</p>",
     unsafe_allow_html=True
 )
