@@ -5,16 +5,6 @@ import google.generativeai as genai
 import re
 import json
 import os
-import psycopg2
-
-# ------------------------
-# Database connection
-# ------------------------
-def get_connection():
-    return psycopg2.connect(os.environ["Internal_Database_URL"])
-
-conn = get_connection()
-cursor = conn.cursor()
 
 # ------------------------
 # Streamlit Page Setup
@@ -62,6 +52,23 @@ st.markdown("""
 st.markdown("<h1 class='main-title'>⚡ Energy Vision</h1>", unsafe_allow_html=True)
 st.markdown("<h3 class='subtitle'>Your Personal Energy & Appliance Consultant</h3>", unsafe_allow_html=True)
 st.markdown("<div class='header-space'></div>", unsafe_allow_html=True)
+
+# ------------------------
+# Sidebar (Admin Unlock)
+# ------------------------
+st.sidebar.title("🔐 Admin Access")
+admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
+is_admin = admin_password == os.environ.get("DATA_PASSWORD", "")
+
+st.sidebar.markdown("---")
+st.sidebar.title("📊 Click Tracker")
+if os.path.exists("click_counts.json"):
+    with open("click_counts.json", "r") as f:
+        data = json.load(f)
+    st.sidebar.write(f"🔹 Insights Clicks: {data['insight_clicks']}")
+    st.sidebar.write(f"🔹 Diagnostic Clicks: {data['diagnostic_clicks']}")
+else:
+    st.sidebar.info("No clicks recorded yet.")
 
 # ------------------------
 # Main Columns
@@ -133,39 +140,24 @@ with left_col:
                             st.info(f"🔹 {row['Alert 3']}")
                         else:
                             st.warning("No matching condition found in the tips sheet.")
-                        # Save request to DB
-                        try:
-                            cursor.execute(
-                                "INSERT INTO energy_requests (pincode, temperature, humidity) VALUES (%s, %s, %s)",
-                                (pincode, forecast['temp_c'], forecast['humidity'])
-                            )
-                            conn.commit()
-                        except Exception as e:
-                            st.error(f"❌ Database Error: {e}")
                     except Exception as e:
                         st.error(f"Error: {e}")
 
-    # --- Password-protected Energy Requests ---
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("<h4>📂 Previous Energy Requests</h4>", unsafe_allow_html=True)
-    password_input = st.text_input("Enter password to view/download energy requests", type="password", key="energy_pass")
-    if password_input == os.environ["DATA_PASSWORD"]:
-        try:
-            df_energy = pd.read_sql("SELECT * FROM energy_requests ORDER BY timestamp DESC", conn)
-            if not df_energy.empty:
-                st.dataframe(df_energy, use_container_width=True)
-                st.download_button(
-                    label="⬇️ Download All Energy Entries as CSV",
-                    data=df_energy.to_csv(index=False).encode("utf-8"),
-                    file_name="energy_requests.csv",
-                    mime="text/csv"
-                )
-            else:
-                st.info("No energy requests recorded yet.")
-        except Exception as e:
-            st.error(f"❌ Could not fetch energy requests: {e}")
-    elif password_input:
-        st.error("❌ Incorrect password")
+    # Show data section only if admin
+    if is_admin:
+        st.markdown("<hr>", unsafe_allow_html=True)
+        st.markdown("<h4>📂 Previous Energy Requests</h4>", unsafe_allow_html=True)
+        if os.path.exists("energy_requests.csv"):
+            df_energy = pd.read_csv("energy_requests.csv")
+            st.dataframe(df_energy, use_container_width=True)
+            st.download_button(
+                label="⬇️ Download All Energy Entries as CSV",
+                data=df_energy.to_csv(index=False).encode("utf-8"),
+                file_name="energy_requests.csv",
+                mime="text/csv"
+            )
+        else:
+            st.info("No energy requests recorded yet.")
 
 # ------------------------
 # Divider
@@ -188,14 +180,8 @@ with right_col:
             model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA")
         with col2:
             display_error = st.text_input("Error Code (Optional)", placeholder="e.g. E4, F07, etc.")
-
-        col1, col2 = st.columns([0.5, 0.5])
-        with col1:
-            issue = st.text_area("Describe the Issue", placeholder="e.g. No display, making noise...")
-
-        col1, col2 = st.columns([0.5, 0.5])
-        with col1:
-            submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
+        issue = st.text_area("Describe the Issue", placeholder="e.g. No display, making noise...")
+        submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
 
     if submitted:
         update_click_count("diagnostic_clicks")
@@ -203,87 +189,32 @@ with right_col:
             st.warning("Please fill in the required fields.")
         else:
             with st.spinner("Analyzing the issue..."):
-                prompt = f"""
-You are an intelligent appliance diagnostic assistant.
-Model Number: {model_name}
-Issue: {issue}
-Error Code: {display_error or 'Not provided'}
-
-Tasks:
-1. Identify the appliance brand and type.
-2. Generate a diagnostic report with sections:
-   🔹 Quick Checks / Self-Diagnosis  
-   🔹 Customer Care Number  
-   🔹 Probable Causes & Estimated Costs (table)
-   🔹 Turnaround Time (TAT)
-"""
                 try:
                     model = genai.GenerativeModel("gemini-2.5-flash-lite")
-                    response = model.generate_content(prompt)
+                    response = model.generate_content(f"Model: {model_name}\nIssue: {issue}\nError Code: {display_error}")
                     text = response.text
                     st.markdown("<div class='info-card'><h4>✅ Diagnosis Report</h4></div>", unsafe_allow_html=True)
-                    sections = re.split(r'(?=🔹)', text)
-                    colors = ["#007ACC", "#008CBA", "#006C77", "#005577"]
-                    for i, sec in enumerate(sections):
-                        sec = sec.strip()
-                        if sec:
-                            sec_html = sec.replace('\n', '<br>')
-                            st.markdown(f"""
-<div style="
-    background-color:{colors[i % len(colors)]};
-    color:#FFFFFF;
-    padding:1.2rem;
-    border-radius:12px;
-    margin-bottom:1rem;
-    box-shadow: 0 0 15px rgba(0,0,0,0.3);
-">
-{sec_html}
-</div>""", unsafe_allow_html=True)
-                    # Save to DB
-                    try:
-                        cursor.execute(
-                            "INSERT INTO service_requests (model_name, error_code, issue) VALUES (%s, %s, %s)",
-                            (model_name, display_error, issue)
-                        )
-                        conn.commit()
-                    except Exception as e:
-                        st.error(f"❌ Database Error: {e}")
+                    for sec in re.split(r'(?=🔹)', text):
+                        if sec.strip():
+                            st.markdown(f"<div style='background:#007ACC;color:#fff;padding:1rem;border-radius:10px;margin-bottom:1rem;'>{sec}</div>", unsafe_allow_html=True)
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
 
-    # --- Password-protected Diagnostic Entries ---
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("<h4>📂 Previous Diagnostic Entries</h4>", unsafe_allow_html=True)
-    password_input2 = st.text_input("Enter password to view/download diagnostic entries", type="password", key="diag_pass")
-    if password_input2 == os.environ["DATA_PASSWORD"]:
-        try:
-            df_db = pd.read_sql("SELECT * FROM service_requests ORDER BY timestamp DESC", conn)
-            if not df_db.empty:
-                st.dataframe(df_db, use_container_width=True)
-                st.download_button(
-                    label="⬇️ Download All Entries as CSV",
-                    data=df_db.to_csv(index=False).encode("utf-8"),
-                    file_name="service_requests.csv",
-                    mime="text/csv"
-                )
-            else:
-                st.info("No diagnostic entries recorded yet.")
-        except Exception as e:
-            st.error(f"❌ Could not fetch database records: {e}")
-    elif password_input2:
-        st.error("❌ Incorrect password")
-
-# ------------------------
-# Sidebar Click Tracker
-# ------------------------
-st.sidebar.title("📊 Click Tracker")
-if os.path.exists("click_counts.json"):
-    with open("click_counts.json", "r") as f:
-        data = json.load(f)
-    st.sidebar.write(f"🔹 Insights Clicks: {data['insight_clicks']}")
-    st.sidebar.write(f"🔹 Diagnostic Clicks: {data['diagnostic_clicks']}")
-else:
-    st.sidebar.info("No clicks recorded yet.")
+    # Show diagnostic data only if admin
+    if is_admin:
+        st.markdown("<hr>", unsafe_allow_html=True)
+        st.markdown("<h4>📂 Previous Diagnostic Entries</h4>", unsafe_allow_html=True)
+        if os.path.exists("service_requests.csv"):
+            df_db = pd.read_csv("service_requests.csv")
+            st.dataframe(df_db, use_container_width=True)
+            st.download_button(
+                label="⬇️ Download All Entries as CSV",
+                data=df_db.to_csv(index=False).encode("utf-8"),
+                file_name="service_requests.csv",
+                mime="text/csv"
+            )
+        else:
+            st.info("No diagnostic entries recorded yet.")
 
 # ------------------------
 # Disclaimer
