@@ -113,6 +113,8 @@ with left_col:
         df_temp["distance"] = ((df_temp["Temperature (°C)"] - temp)**2 + (df_temp["Humidity (%)"] - hum)**2) ** 0.5
         return df_temp.loc[df_temp["distance"].idxmin()]
 
+    ENERGY_CSV = "energy_requests.csv"  # CSV file for storing energy requests
+
     with st.container():
         col1, col2 = st.columns([0.5, 0.5])
         with col1:
@@ -133,11 +135,35 @@ with left_col:
                             st.info(f"🔹 {row['Alert 3']}")
                         else:
                             st.warning("No matching condition found in the tips sheet.")
-                        # Save request to DB
+
+                        # ------------------------
+                        # Save request to CSV including location & alerts
+                        # ------------------------
+                        energy_data = {
+                            "timestamp": pd.Timestamp.now(),
+                            "pincode": pincode,
+                            "location": forecast['place'],
+                            "temperature": forecast['temp_c'],
+                            "humidity": forecast['humidity'],
+                            "Alert 1": row["Alert 1"] if row is not None else "",
+                            "Alert 2": row["Alert 2"] if row is not None else "",
+                            "Alert 3": row["Alert 3"] if row is not None else ""
+                        }
+                        if os.path.exists(ENERGY_CSV):
+                            df_energy = pd.read_csv(ENERGY_CSV)
+                            df_energy = pd.concat([df_energy, pd.DataFrame([energy_data])], ignore_index=True)
+                        else:
+                            df_energy = pd.DataFrame([energy_data])
+                        df_energy.to_csv(ENERGY_CSV, index=False)
+
+                        # Save to DB (optional, if you still want)
                         try:
                             cursor.execute(
-                                "INSERT INTO energy_requests (pincode, temperature, humidity) VALUES (%s, %s, %s)",
-                                (pincode, forecast['temp_c'], forecast['humidity'])
+                                "INSERT INTO energy_requests (pincode, temperature, humidity, location, alert1, alert2, alert3) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                                (pincode, forecast['temp_c'], forecast['humidity'], forecast['place'],
+                                 row["Alert 1"] if row is not None else None,
+                                 row["Alert 2"] if row is not None else None,
+                                 row["Alert 3"] if row is not None else None)
                             )
                             conn.commit()
                         except Exception as e:
@@ -250,20 +276,17 @@ if admin_password == os.environ["DATA_PASSWORD"]:
     st.sidebar.success("Access granted ✅")
 
     st.sidebar.markdown("### 📂 Previous Energy Requests")
-    try:
-        df_energy = pd.read_sql("SELECT * FROM energy_requests ORDER BY timestamp DESC", conn)
-        if not df_energy.empty:
-            st.sidebar.dataframe(df_energy)
-            st.sidebar.download_button(
-                label="⬇️ Download Energy Requests CSV",
-                data=df_energy.to_csv(index=False).encode("utf-8"),
-                file_name="energy_requests.csv",
-                mime="text/csv"
-            )
-        else:
-            st.sidebar.info("No energy requests recorded yet.")
-    except Exception as e:
-        st.sidebar.error(f"❌ Could not fetch energy requests: {e}")
+    if os.path.exists(ENERGY_CSV):
+        df_energy = pd.read_csv(ENERGY_CSV)
+        st.sidebar.dataframe(df_energy)
+        st.sidebar.download_button(
+            label="⬇️ Download Energy Requests CSV",
+            data=df_energy.to_csv(index=False).encode("utf-8"),
+            file_name="energy_requests.csv",
+            mime="text/csv"
+        )
+    else:
+        st.sidebar.info("No energy requests recorded yet.")
 
     st.sidebar.markdown("### 📂 Previous Diagnostic Entries")
     try:
