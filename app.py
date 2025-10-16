@@ -7,104 +7,70 @@ import json
 import os
 import psycopg2
 
-# ================================================
-# DATABASE CONNECTION
-# ================================================
+# ------------------------
+# Database connection
+# ------------------------
 def get_connection():
     return psycopg2.connect(os.environ["Internal_Database_URL"])
 
 conn = get_connection()
 cursor = conn.cursor()
 
-# Create tables if they don't exist
-try:
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS service_requests (
-            id SERIAL PRIMARY KEY,
-            model_name TEXT,
-            error_code TEXT,
-            issue TEXT,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS energy_requests (
-            id SERIAL PRIMARY KEY,
-            pincode TEXT,
-            location TEXT,
-            temperature REAL,
-            humidity REAL,
-            alert1 TEXT,
-            alert2 TEXT,
-            alert3 TEXT,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.commit()
-except Exception as e:
-    st.error(f"❌ Database Initialization Error: {e}")
-
-# ================================================
+# ------------------------
 # Streamlit Page Setup
-# ================================================
+# ------------------------
 st.set_page_config(
     page_title="⚡ Energy Vision",
     layout="wide",
 )
 
-# ================================================
-# CLICK TRACKER
-# ================================================
+# ------------------------
+# Click Tracker
+# ------------------------
 def update_click_count(key):
     filename = "click_counts.json"
-
-    # Load or create file
     if os.path.exists(filename):
         with open(filename, "r") as f:
             data = json.load(f)
     else:
         data = {"insight_clicks": 0, "diagnostic_clicks": 0}
-
-    # Increment
     data[key] += 1
-
-    # Save back
     with open(filename, "w") as f:
         json.dump(data, f)
 
-# ================================================
-# Custom CSS for styling
-# ================================================
+# ------------------------
+# Custom CSS Styling
+# ------------------------
 st.markdown("""
 <style>
     body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(to bottom, #D6E1F0, #C5D4E7); color: #0D1B2A; }
     .main-title { color: #005FE6; text-align: center; font-size: 2.5em; font-weight: 700; text-shadow: 0 1px 10px rgba(0, 95, 230, 0.25); margin-bottom: 0.3rem; }
     .subtitle { color: #3F4E61; text-align: center; font-size: 1.3em; margin-bottom: 2.5rem; }
     .section-header { color: #005FE6; font-size: 1.6em; font-weight: 600; margin-bottom: 1rem; }
-    .info-card { background: linear-gradient(135deg, #E3E9F4, #D8E1F2); border-radius: 18px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 1px solid rgba(0,95,230,0.15); }
+    .info-card { background: linear-gradient(135deg, #E3E9F4, #D8E1F2); border-radius: 18px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); border: 1px solid rgba(0, 95, 230, 0.15); }
     .divider { border-left: 2px solid rgba(0, 0, 0, 0.1); height: 100%; margin: auto; }
-    div.stButton > button { background: linear-gradient(135deg, #005FE6, #007FFF) !important; color: white !important; border: none; border-radius: 12px; padding: 0.6rem 1.2rem; font-weight: 600; font-size: 1rem; box-shadow: 0 3px 10px rgba(0,95,230,0.4); transition: all 0.2s ease-in-out; }
-    div.stButton > button:hover { background: linear-gradient(135deg, #007FFF, #33A0FF) !important; transform: scale(1.03); box-shadow: 0 5px 14px rgba(0,95,230,0.45); }
+    div.stButton > button { background: linear-gradient(135deg, #005FE6, #007FFF) !important; color: white !important; border: none; border-radius: 12px; padding: 0.6rem 1.2rem; font-weight: 600; font-size: 1rem; box-shadow: 0 3px 10px rgba(0, 95, 230, 0.4); transition: all 0.2s ease-in-out; }
+    div.stButton > button:hover { background: linear-gradient(135deg, #007FFF, #33A0FF) !important; transform: scale(1.03); box-shadow: 0 5px 14px rgba(0, 95, 230, 0.45); }
     .header-space { height: 80px; background: linear-gradient(to bottom, rgba(0,95,230,0.1), rgba(255,255,255,0)); }
     .stApp { background: linear-gradient(to bottom, #D6E1F0, #C5D4E7); }
 </style>
 """, unsafe_allow_html=True)
 
-# ================================================
-# HEADER
-# ================================================
+# ------------------------
+# Header
+# ------------------------
 st.markdown("<h1 class='main-title'>⚡ Energy Vision</h1>", unsafe_allow_html=True)
 st.markdown("<h3 class='subtitle'>Your Personal Energy & Appliance Consultant</h3>", unsafe_allow_html=True)
 st.markdown("<div class='header-space'></div>", unsafe_allow_html=True)
 
-# ================================================
-# MAIN COLUMNS
-# ================================================
+# ------------------------
+# Main Columns
+# ------------------------
 left_col, divider_col, right_col = st.columns([1, 0.05, 1])
 
-# ====================================================
+# ------------------------
 # LEFT SIDE → ENERGY INSIGHTS
-# ====================================================
+# ------------------------
 with left_col:
     st.markdown("<h3 class='section-header'>🌞 Today's Energy Saving Tip</h3>", unsafe_allow_html=True)
 
@@ -129,12 +95,8 @@ with left_col:
         loc = gdata[0]
         lat, lon = float(loc["lat"]), float(loc["lon"])
         display_name = loc.get("display_name", "Unknown Location")
-
         wx_url = "https://api.open-meteo.com/v1/forecast"
-        r = requests.get(wx_url, params={
-            "latitude": lat, "longitude": lon, "current_weather": True,
-            "hourly": "temperature_2m,relative_humidity_2m"
-        }, timeout=10)
+        r = requests.get(wx_url, params={"latitude": lat, "longitude": lon, "current_weather": True, "hourly": "temperature_2m,relative_humidity_2m"}, timeout=10)
         r.raise_for_status()
         data = r.json()
         temp = data.get("current_weather", {}).get("temperature")
@@ -151,7 +113,6 @@ with left_col:
         df_temp["distance"] = ((df_temp["Temperature (°C)"] - temp)**2 + (df_temp["Humidity (%)"] - hum)**2) ** 0.5
         return df_temp.loc[df_temp["distance"].idxmin()]
 
-    # --- Energy Input ---
     with st.container():
         col1, col2 = st.columns([0.5, 0.5])
         with col1:
@@ -170,47 +131,51 @@ with left_col:
                             st.success(f"🔹 {row['Alert 1']}")
                             st.info(f"🔹 {row['Alert 2']}")
                             st.info(f"🔹 {row['Alert 3']}")
-                            # Save to DB
-                            try:
-                                cursor.execute(
-                                    "INSERT INTO energy_requests (pincode, location, temperature, humidity, alert1, alert2, alert3) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                                    (pincode, forecast["place"], forecast["temp_c"], forecast["humidity"], row["Alert 1"], row["Alert 2"], row["Alert 3"])
-                                )
-                                conn.commit()
-                            except Exception as e:
-                                st.error(f"❌ Could not save energy entry: {e}")
                         else:
                             st.warning("No matching condition found in the tips sheet.")
+                        # Save request to DB
+                        try:
+                            cursor.execute(
+                                "INSERT INTO energy_requests (pincode, temperature, humidity) VALUES (%s, %s, %s)",
+                                (pincode, forecast['temp_c'], forecast['humidity'])
+                            )
+                            conn.commit()
+                        except Exception as e:
+                            st.error(f"❌ Database Error: {e}")
                     except Exception as e:
                         st.error(f"Error: {e}")
 
-    # --- Display Energy Requests ---
+    # --- Password-protected Energy Requests ---
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<h4>📂 Previous Energy Requests</h4>", unsafe_allow_html=True)
-    try:
-        df_energy = pd.read_sql("SELECT * FROM energy_requests ORDER BY timestamp DESC", conn)
-        if not df_energy.empty:
-            st.dataframe(df_energy, use_container_width=True)
-            st.download_button(
-                label="⬇️ Download All Energy Entries as CSV",
-                data=df_energy.to_csv(index=False).encode("utf-8"),
-                file_name="energy_requests.csv",
-                mime="text/csv"
-            )
-        else:
-            st.info("No energy requests recorded yet.")
-    except Exception as e:
-        st.error(f"❌ Could not fetch energy requests: {e}")
+    password_input = st.text_input("Enter password to view/download energy requests", type="password", key="energy_pass")
+    if password_input == os.environ["DATA_PASSWORD"]:
+        try:
+            df_energy = pd.read_sql("SELECT * FROM energy_requests ORDER BY timestamp DESC", conn)
+            if not df_energy.empty:
+                st.dataframe(df_energy, use_container_width=True)
+                st.download_button(
+                    label="⬇️ Download All Energy Entries as CSV",
+                    data=df_energy.to_csv(index=False).encode("utf-8"),
+                    file_name="energy_requests.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.info("No energy requests recorded yet.")
+        except Exception as e:
+            st.error(f"❌ Could not fetch energy requests: {e}")
+    elif password_input:
+        st.error("❌ Incorrect password")
 
-# ====================================================
-# DIVIDER
-# ====================================================
+# ------------------------
+# Divider
+# ------------------------
 with divider_col:
     st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
-# ====================================================
+# ------------------------
 # RIGHT SIDE → APPLIANCE DIAGNOSTIC
-# ====================================================
+# ------------------------
 with right_col:
     st.markdown("<h3 class='section-header'>🔧 Appliance Diagnostic Assistant</h3>", unsafe_allow_html=True)
     st.markdown("Describe the issue to get quick troubleshooting guidance.")
@@ -223,9 +188,11 @@ with right_col:
             model_name = st.text_input("Appliance Model Number", placeholder="e.g. LG T70SPSF2Z, Mi L32M6-RA")
         with col2:
             display_error = st.text_input("Error Code (Optional)", placeholder="e.g. E4, F07, etc.")
+
         col1, col2 = st.columns([0.5, 0.5])
         with col1:
             issue = st.text_area("Describe the Issue", placeholder="e.g. No display, making noise...")
+
         col1, col2 = st.columns([0.5, 0.5])
         with col1:
             submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
@@ -243,61 +210,35 @@ Issue: {issue}
 Error Code: {display_error or 'Not provided'}
 
 Tasks:
-1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
-2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
- 
+1. Identify the appliance brand and type.
+2. Generate a diagnostic report with sections:
    🔹 Quick Checks / Self-Diagnosis  
-   • Give 2–3 simple user-level checks to perform before calling a technician.
- 
    🔹 Customer Care Number  
-   • Give the official customer care helpline number for the brand.
- 
-   🔹 Probable Causes & Estimated Costs  
-   • Mention 2–3 possible technical causes (just name them, no explanations).  
-   • Add approximate cost range in INR for each cause.  
-   • Present this section **strictly as a clean 2-column table** —  
-     Column 1: “Probable Cause”  
-     Column 2: “Estimated Cost (INR Range)”.  
-   • Do not include markdown symbols like |, *, or #.  
-   • Use simple spacing to make it look like a neat table.
- 
-   🔹 Turnaround Time (TAT)  
-   • Mention the realistic average service time in days.
- 
-Formatting Instructions:
-- Each section heading should start with a blue diamond (🔹).
-- Each point should start with a small black dot (•) except inside the table.
-- Keep response short, well-structured, and visually clean.
-- Avoid unnecessary text or explanations.
+   🔹 Probable Causes & Estimated Costs (table)
+   🔹 Turnaround Time (TAT)
 """
                 try:
                     model = genai.GenerativeModel("gemini-2.5-flash-lite")
                     response = model.generate_content(prompt)
                     text = response.text
-
                     st.markdown("<div class='info-card'><h4>✅ Diagnosis Report</h4></div>", unsafe_allow_html=True)
                     sections = re.split(r'(?=🔹)', text)
                     colors = ["#007ACC", "#008CBA", "#006C77", "#005577"]
-
                     for i, sec in enumerate(sections):
                         sec = sec.strip()
                         if sec:
                             sec_html = sec.replace('\n', '<br>')
-                            st.markdown(
-                                f"""
+                            st.markdown(f"""
 <div style="
-                                    background-color:{colors[i % len(colors)]};
-                                    color:#FFFFFF;
-                                    padding:1.2rem;
-                                    border-radius:12px;
-                                    margin-bottom:1rem;
-                                    box-shadow: 0 0 15px rgba(0,0,0,0.3);
-                                ">
-                                {sec_html}
-</div>
-                                """,
-                                unsafe_allow_html=True,
-                            )
+    background-color:{colors[i % len(colors)]};
+    color:#FFFFFF;
+    padding:1.2rem;
+    border-radius:12px;
+    margin-bottom:1rem;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+">
+{sec_html}
+</div>""", unsafe_allow_html=True)
                     # Save to DB
                     try:
                         cursor.execute(
@@ -307,31 +248,34 @@ Formatting Instructions:
                         conn.commit()
                     except Exception as e:
                         st.error(f"❌ Database Error: {e}")
-
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
 
-    # --- Display Appliance Submissions ---
+    # --- Password-protected Diagnostic Entries ---
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<h4>📂 Previous Diagnostic Entries</h4>", unsafe_allow_html=True)
-    try:
-        df_db = pd.read_sql("SELECT * FROM service_requests ORDER BY timestamp DESC", conn)
-        if not df_db.empty:
-            st.dataframe(df_db, use_container_width=True)
-            st.download_button(
-                label="⬇️ Download All Entries as CSV",
-                data=df_db.to_csv(index=False).encode("utf-8"),
-                file_name="service_requests.csv",
-                mime="text/csv"
-            )
-        else:
-            st.info("No diagnostic entries recorded yet.")
-    except Exception as e:
-        st.error(f"❌ Could not fetch database records: {e}")
+    password_input2 = st.text_input("Enter password to view/download diagnostic entries", type="password", key="diag_pass")
+    if password_input2 == os.environ["DATA_PASSWORD"]:
+        try:
+            df_db = pd.read_sql("SELECT * FROM service_requests ORDER BY timestamp DESC", conn)
+            if not df_db.empty:
+                st.dataframe(df_db, use_container_width=True)
+                st.download_button(
+                    label="⬇️ Download All Entries as CSV",
+                    data=df_db.to_csv(index=False).encode("utf-8"),
+                    file_name="service_requests.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.info("No diagnostic entries recorded yet.")
+        except Exception as e:
+            st.error(f"❌ Could not fetch database records: {e}")
+    elif password_input2:
+        st.error("❌ Incorrect password")
 
-# ================================================
-# SIDEBAR STATS
-# ================================================
+# ------------------------
+# Sidebar Click Tracker
+# ------------------------
 st.sidebar.title("📊 Click Tracker")
 if os.path.exists("click_counts.json"):
     with open("click_counts.json", "r") as f:
@@ -341,9 +285,9 @@ if os.path.exists("click_counts.json"):
 else:
     st.sidebar.info("No clicks recorded yet.")
 
-# ================================================
-# DISCLAIMER
-# ================================================
+# ------------------------
+# Disclaimer
+# ------------------------
 st.markdown("---")
 st.markdown(
     "<p style='text-align:center; color: #555555; font-size: 0.9rem;'>⚠️ Disclaimer: The factuality of the responses may not be precise as they are LLM-generated responses. Please share your feedback with us.</p>",
