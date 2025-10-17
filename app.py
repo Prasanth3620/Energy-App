@@ -138,23 +138,23 @@ with left_col:
 
                         # ------------------------
                         # Save request to CSV including location & alerts
-                        # ------------------------
-                        energy_data = {
-                            "timestamp": pd.Timestamp.now(),
-                            "pincode": pincode,
-                            "location": forecast['place'],
-                            "temperature": forecast['temp_c'],
-                            "humidity": forecast['humidity'],
-                            "Alert 1": row["Alert 1"] if row is not None else "",
-                            "Alert 2": row["Alert 2"] if row is not None else "",
-                            "Alert 3": row["Alert 3"] if row is not None else ""
-                        }
-                        if os.path.exists(ENERGY_CSV):
-                            df_energy = pd.read_csv(ENERGY_CSV)
-                            df_energy = pd.concat([df_energy, pd.DataFrame([energy_data])], ignore_index=True)
-                        else:
-                            df_energy = pd.DataFrame([energy_data])
-                        df_energy.to_csv(ENERGY_CSV, index=False)
+                        # # ------------------------
+                        # energy_data = {
+                        #     "timestamp": pd.Timestamp.now(),
+                        #     "pincode": pincode,
+                        #     "location": forecast['place'],
+                        #     "temperature": forecast['temp_c'],
+                        #     "humidity": forecast['humidity'],
+                        #     "Alert 1": row["Alert 1"] if row is not None else "",
+                        #     "Alert 2": row["Alert 2"] if row is not None else "",
+                        #     "Alert 3": row["Alert 3"] if row is not None else ""
+                        # }
+                        # if os.path.exists(ENERGY_CSV):
+                        #     df_energy = pd.read_csv(ENERGY_CSV)
+                        #     df_energy = pd.concat([df_energy, pd.DataFrame([energy_data])], ignore_index=True)
+                        # else:
+                        #     df_energy = pd.DataFrame([energy_data])
+                        # df_energy.to_csv(ENERGY_CSV, index=False)
 
                         # Save to DB (optional, if you still want)
                         try:
