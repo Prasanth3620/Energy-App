@@ -276,19 +276,35 @@ if admin_password == os.environ["DATA_PASSWORD"]:
     st.sidebar.success("Access granted ✅")
 
     st.sidebar.markdown("### 📂 Previous Energy Requests")
-    if os.path.exists(ENERGY_CSV):
-        df_energy = pd.read_csv(ENERGY_CSV)
-        st.sidebar.dataframe(df_energy)
-        st.sidebar.download_button(
-            label="⬇️ Download Energy Requests CSV",
-            data=df_energy.to_csv(index=False).encode("utf-8"),
-            file_name="energy_requests.csv",
-            mime="text/csv"
-        )
-    else:
-        st.sidebar.info("No energy requests recorded yet.")
+    # if os.path.exists(ENERGY_CSV):
+    #     df_energy = pd.read_csv(ENERGY_CSV)
+    #     st.sidebar.dataframe(df_energy)
+    #     st.sidebar.download_button(
+    #         label="⬇️ Download Energy Requests CSV",
+    #         data=df_energy.to_csv(index=False).encode("utf-8"),
+    #         file_name="energy_requests.csv",
+    #         mime="text/csv"
+    #     )
+    # else:
+    #     st.sidebar.info("No energy requests recorded yet.")
 
-    st.sidebar.markdown("### 📂 Previous Diagnostic Entries")
+   
+    try:
+        df_ene = pd.read_sql("SELECT * FROM energy_requests ORDER BY timestamp DESC", conn)
+        if not df_ene.empty:
+            st.sidebar.dataframe(df_ene)
+            st.sidebar.download_button(
+                label="⬇️ Download Energy Entries CSV",
+                data=df_ene.to_csv(index=False).encode("utf-8"),
+                file_name="energy_requests.csv",
+                mime="text/csv"
+            )
+        else:
+            st.sidebar.info("No Pincode entries recorded yet.")
+    except Exception as e:
+        st.sidebar.error(f"❌ Could not fetch Pincode entries: {e}")
+        
+    st.sidebar.markdown("### 📂 Previous Diagnostic Entries")    
     try:
         df_diag = pd.read_sql("SELECT * FROM service_requests ORDER BY timestamp DESC", conn)
         if not df_diag.empty:
