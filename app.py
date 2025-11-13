@@ -145,28 +145,6 @@ with left_col:
                     except Exception as e:
                         st.error(f"Error: {e}")
 
-    # --- Password-protected Energy Requests ---
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("<h4>📂 Previous Energy Requests</h4>", unsafe_allow_html=True)
-    password_input = st.text_input("Enter password to view/download energy requests", type="password", key="energy_pass")
-    if password_input == os.environ["DATA_PASSWORD"]:
-        try:
-            df_energy = pd.read_sql("SELECT * FROM energy_requests ORDER BY timestamp DESC", conn)
-            if not df_energy.empty:
-                st.dataframe(df_energy, use_container_width=True)
-                st.download_button(
-                    label="⬇️ Download All Energy Entries as CSV",
-                    data=df_energy.to_csv(index=False).encode("utf-8"),
-                    file_name="energy_requests.csv",
-                    mime="text/csv"
-                )
-            else:
-                st.info("No energy requests recorded yet.")
-        except Exception as e:
-            st.error(f"❌ Could not fetch energy requests: {e}")
-    elif password_input:
-        st.error("❌ Incorrect password")
-
 # ------------------------
 # Divider
 # ------------------------
@@ -251,30 +229,8 @@ Tasks:
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
 
-    # --- Password-protected Diagnostic Entries ---
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("<h4>📂 Previous Diagnostic Entries</h4>", unsafe_allow_html=True)
-    password_input2 = st.text_input("Enter password to view/download diagnostic entries", type="password", key="diag_pass")
-    if password_input2 == os.environ["DATA_PASSWORD"]:
-        try:
-            df_db = pd.read_sql("SELECT * FROM service_requests ORDER BY timestamp DESC", conn)
-            if not df_db.empty:
-                st.dataframe(df_db, use_container_width=True)
-                st.download_button(
-                    label="⬇️ Download All Entries as CSV",
-                    data=df_db.to_csv(index=False).encode("utf-8"),
-                    file_name="service_requests.csv",
-                    mime="text/csv"
-                )
-            else:
-                st.info("No diagnostic entries recorded yet.")
-        except Exception as e:
-            st.error(f"❌ Could not fetch database records: {e}")
-    elif password_input2:
-        st.error("❌ Incorrect password")
-
 # ------------------------
-# Sidebar Click Tracker
+# Sidebar Click Tracker + Admin Access
 # ------------------------
 st.sidebar.title("📊 Click Tracker")
 if os.path.exists("click_counts.json"):
@@ -284,6 +240,48 @@ if os.path.exists("click_counts.json"):
     st.sidebar.write(f"🔹 Diagnostic Clicks: {data['diagnostic_clicks']}")
 else:
     st.sidebar.info("No clicks recorded yet.")
+
+# ------------------------
+# Sidebar Admin Password & Data Access
+# ------------------------
+st.sidebar.title("🔒 Admin Access")
+admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
+if admin_password == os.environ["DATA_PASSWORD"]:
+    st.sidebar.success("Access granted ✅")
+
+    st.sidebar.markdown("### 📂 Previous Energy Requests")
+    try:
+        df_energy = pd.read_sql("SELECT * FROM energy_requests ORDER BY timestamp DESC", conn)
+        if not df_energy.empty:
+            st.sidebar.dataframe(df_energy)
+            st.sidebar.download_button(
+                label="⬇️ Download Energy Requests CSV",
+                data=df_energy.to_csv(index=False).encode("utf-8"),
+                file_name="energy_requests.csv",
+                mime="text/csv"
+            )
+        else:
+            st.sidebar.info("No energy requests recorded yet.")
+    except Exception as e:
+        st.sidebar.error(f"❌ Could not fetch energy requests: {e}")
+
+    st.sidebar.markdown("### 📂 Previous Diagnostic Entries")
+    try:
+        df_diag = pd.read_sql("SELECT * FROM service_requests ORDER BY timestamp DESC", conn)
+        if not df_diag.empty:
+            st.sidebar.dataframe(df_diag)
+            st.sidebar.download_button(
+                label="⬇️ Download Diagnostic Entries CSV",
+                data=df_diag.to_csv(index=False).encode("utf-8"),
+                file_name="service_requests.csv",
+                mime="text/csv"
+            )
+        else:
+            st.sidebar.info("No diagnostic entries recorded yet.")
+    except Exception as e:
+        st.sidebar.error(f"❌ Could not fetch diagnostic entries: {e}")
+elif admin_password:
+    st.sidebar.error("❌ Incorrect password")
 
 # ------------------------
 # Disclaimer
