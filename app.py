@@ -136,8 +136,8 @@ with left_col:
                         else:
                             st.warning("No matching condition found in the tips sheet.")
 
-                        ------------------------
-                        Save request to CSV including location & alerts
+                        # ------------------------
+                        # Save request to CSV including location & alerts
                         # ------------------------
                         energy_data = {
                             "timestamp": pd.Timestamp.now(),
