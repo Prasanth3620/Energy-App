@@ -156,7 +156,7 @@ with left_col:
                             df_energy = pd.DataFrame([energy_data])
                         df_energy.to_csv(ENERGY_CSV, index=False)
 
-                        Save to DB (optional, if you still want)
+                        # Save to DB (optional, if you still want)
                         try:
                             cursor.execute(
                                 "INSERT INTO energy_requests (pincode, temperature, humidity, location, alert1, alert2, alert3) VALUES (%s, %s, %s, %s, %s, %s, %s)",
