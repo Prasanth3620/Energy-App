@@ -16,6 +16,22 @@ def get_connection():
 conn = get_connection()
 cursor = conn.cursor()
 
+# Ensure the table exists (run only once)
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS energy_requests (
+  id SERIAL PRIMARY KEY,
+  timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+  pincode VARCHAR(32),
+  location TEXT,
+  temperature DOUBLE PRECISION,
+  humidity DOUBLE PRECISION,
+  alert1 TEXT,
+  alert2 TEXT,
+  alert3 TEXT
+)
+""")
+conn.commit()
+
 # ------------------------
 # Streamlit Page Setup
 # ------------------------
