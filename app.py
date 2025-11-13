@@ -16,22 +16,6 @@ def get_connection():
 conn = get_connection()
 cursor = conn.cursor()
 
-# Ensure the table exists (run only once)
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS energy_requests (
-  id SERIAL PRIMARY KEY,
-  timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
-  pincode VARCHAR(32),
-  location TEXT,
-  temperature DOUBLE PRECISION,
-  humidity DOUBLE PRECISION,
-  alert1 TEXT,
-  alert2 TEXT,
-  alert3 TEXT
-)
-""")
-conn.commit()
-
 # ------------------------
 # Streamlit Page Setup
 # ------------------------
@@ -129,6 +113,8 @@ with left_col:
         df_temp["distance"] = ((df_temp["Temperature (°C)"] - temp)**2 + (df_temp["Humidity (%)"] - hum)**2) ** 0.5
         return df_temp.loc[df_temp["distance"].idxmin()]
 
+    ENERGY_CSV = "energy_requests.csv"  # CSV file for storing energy requests
+
     with st.container():
         col1, col2 = st.columns([0.5, 0.5])
         with col1:
@@ -150,20 +136,35 @@ with left_col:
                         else:
                             st.warning("No matching condition found in the tips sheet.")
 
-                        # ✅ Save Energy Requests to PostgreSQL (persistent)
+                        # ------------------------
+                        # Save request to CSV including location & alerts
+                        # ------------------------
+                        energy_data = {
+                            "timestamp": pd.Timestamp.now(),
+                            "pincode": pincode,
+                            "location": forecast['place'],
+                            "temperature": forecast['temp_c'],
+                            "humidity": forecast['humidity'],
+                            "Alert 1": row["Alert 1"] if row is not None else "",
+                            "Alert 2": row["Alert 2"] if row is not None else "",
+                            "Alert 3": row["Alert 3"] if row is not None else ""
+                        }
+                        if os.path.exists(ENERGY_CSV):
+                            df_energy = pd.read_csv(ENERGY_CSV)
+                            df_energy = pd.concat([df_energy, pd.DataFrame([energy_data])], ignore_index=True)
+                        else:
+                            df_energy = pd.DataFrame([energy_data])
+                        df_energy.to_csv(ENERGY_CSV, index=False)
+
+                        # Save to DB (optional, if you still want)
                         try:
-                            cursor.execute("""
-                                INSERT INTO energy_requests (timestamp, pincode, location, temperature, humidity, alert1, alert2, alert3)
-                                VALUES (NOW(), %s, %s, %s, %s, %s, %s, %s)
-                            """, (
-                                pincode,
-                                forecast['place'],
-                                forecast['temp_c'],
-                                forecast['humidity'],
-                                row["Alert 1"] if row is not None else None,
-                                row["Alert 2"] if row is not None else None,
-                                row["Alert 3"] if row is not None else None
-                            ))
+                            cursor.execute(
+                                "INSERT INTO energy_requests (pincode, temperature, humidity, location, alert1, alert2, alert3) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                                (pincode, forecast['temp_c'], forecast['humidity'], forecast['place'],
+                                 row["Alert 1"] if row is not None else None,
+                                 row["Alert 2"] if row is not None else None,
+                                 row["Alert 3"] if row is not None else None)
+                            )
                             conn.commit()
                         except Exception as e:
                             st.error(f"❌ Database Error: {e}")
@@ -213,12 +214,32 @@ Issue: {issue}
 Error Code: {display_error or 'Not provided'}
 
 Tasks:
-1. Identify the appliance brand and type.
-2. Generate a diagnostic report with sections:
+1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
+2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
+ 
    🔹 Quick Checks / Self-Diagnosis  
+   • Give 2–3 simple user-level checks to perform before calling a technician.
+ 
    🔹 Customer Care Number  
-   🔹 Probable Causes & Estimated Costs (table)
-   🔹 Turnaround Time (TAT)
+   • Give the official customer care helpline number for the brand.
+ 
+   🔹 Probable Causes & Estimated Costs  
+   • Mention 2–3 possible technical causes (just name them, no explanations).  
+   • Add approximate cost range in INR for each cause.  
+   • Present this section **strictly as a clean 2-column table** —  
+     Column 1: “Probable Cause”  
+     Column 2: “Estimated Cost (INR Range)”.  
+   • Do not include markdown symbols like |, *, or #.  
+   • Use simple spacing to make it look like a neat table.
+ 
+   🔹 Turnaround Time (TAT)  
+   • Mention the realistic average service time in days.
+ 
+Formatting Instructions:
+- Each section heading should start with a blue diamond (🔹).
+- Each point should start with a small black dot (•) except inside the table.
+- Keep response short, well-structured, and visually clean.
+- Avoid unnecessary text or explanations.
 """
                 try:
                     model = genai.GenerativeModel("gemini-2.5-flash-lite")
@@ -254,33 +275,56 @@ Tasks:
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
 
+# # ------------------------
+# # Sidebar Click Tracker + Admin Access
+# # ------------------------
+# st.sidebar.title("📊 Click Tracker")
+# if os.path.exists("click_counts.json"):
+#     with open("click_counts.json", "r") as f:
+#         data = json.load(f)
+#     st.sidebar.write(f"🔹 Insights Clicks: {data['insight_clicks']}")
+#     st.sidebar.write(f"🔹 Diagnostic Clicks: {data['diagnostic_clicks']}")
+# else:
+#     st.sidebar.info("No clicks recorded yet.")
+
 # ------------------------
-# Sidebar Admin Access
+# Sidebar Admin Password & Data Access
 # ------------------------
 st.sidebar.title("🔒 Admin Access")
 admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
 if admin_password == os.environ["DATA_PASSWORD"]:
     st.sidebar.success("Access granted ✅")
 
-    # ✅ Fetch Energy Requests from DB (persistent)
     st.sidebar.markdown("### 📂 Previous Energy Requests")
+    if os.path.exists(ENERGY_CSV):
+        df_energy = pd.read_csv(ENERGY_CSV)
+        st.sidebar.dataframe(df_energy)
+        st.sidebar.download_button(
+            label="⬇️ Download Energy Requests CSV",
+            data=df_energy.to_csv(index=False).encode("utf-8"),
+            file_name="energy_requests.csv",
+            mime="text/csv"
+        )
+    else:
+        st.sidebar.info("No energy requests recorded yet.")
+
+   
     try:
-        df_energy = pd.read_sql("SELECT * FROM energy_requests ORDER BY timestamp DESC", conn)
-        if not df_energy.empty:
-            st.sidebar.dataframe(df_energy)
+        df_ene = pd.read_sql("SELECT * FROM energy_requests ORDER BY timestamp DESC", conn)
+        if not df_ene.empty:
+            st.sidebar.dataframe(df_ene)
             st.sidebar.download_button(
-                label="⬇️ Download Energy Requests CSV",
-                data=df_energy.to_csv(index=False).encode("utf-8"),
+                label="⬇️ Download Energy Entries CSV",
+                data=df_ene.to_csv(index=False).encode("utf-8"),
                 file_name="energy_requests.csv",
                 mime="text/csv"
             )
         else:
-            st.sidebar.info("No energy requests recorded yet.")
+            st.sidebar.info("No Pincode entries recorded yet.")
     except Exception as e:
-        st.sidebar.error(f"❌ Could not fetch energy requests: {e}")
-
-    # Fetch Diagnostic Entries
-    st.sidebar.markdown("### 📂 Previous Diagnostic Entries")
+        st.sidebar.error(f"❌ Could not fetch Pincode entries: {e}")
+        
+    st.sidebar.markdown("### 📂 Previous Diagnostic Entries")    
     try:
         df_diag = pd.read_sql("SELECT * FROM service_requests ORDER BY timestamp DESC", conn)
         if not df_diag.empty:
