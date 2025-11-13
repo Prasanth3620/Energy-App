@@ -16,6 +16,18 @@ def get_connection():
 conn = get_connection()
 cursor = conn.cursor()
 
+# Ensure the service_requests table exists (run only once)
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS service_requests (
+  id SERIAL PRIMARY KEY,
+  timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+  model_name TEXT,
+  error_code TEXT,
+  issue TEXT
+)
+""")
+conn.commit()
+
 # ------------------------
 # Streamlit Page Setup
 # ------------------------
