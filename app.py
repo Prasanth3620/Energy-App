@@ -133,12 +133,21 @@ with left_col:
                             st.info(f"🔹 {row['Alert 3']}")
                         else:
                             st.warning("No matching condition found in the tips sheet.")
-                        # Save request to DB
+
+                        # ✅ Save Energy Requests to PostgreSQL (persistent)
                         try:
-                            cursor.execute(
-                                "INSERT INTO energy_requests (pincode, temperature, humidity) VALUES (%s, %s, %s)",
-                                (pincode, forecast['temp_c'], forecast['humidity'])
-                            )
+                            cursor.execute("""
+                                INSERT INTO energy_requests (timestamp, pincode, location, temperature, humidity, alert1, alert2, alert3)
+                                VALUES (NOW(), %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                pincode,
+                                forecast['place'],
+                                forecast['temp_c'],
+                                forecast['humidity'],
+                                row["Alert 1"] if row is not None else None,
+                                row["Alert 2"] if row is not None else None,
+                                row["Alert 3"] if row is not None else None
+                            ))
                             conn.commit()
                         except Exception as e:
                             st.error(f"❌ Database Error: {e}")
@@ -230,25 +239,14 @@ Tasks:
                     st.error(f"❌ Error: {e}")
 
 # ------------------------
-# Sidebar Click Tracker + Admin Access
-# ------------------------
-st.sidebar.title("📊 Click Tracker")
-if os.path.exists("click_counts.json"):
-    with open("click_counts.json", "r") as f:
-        data = json.load(f)
-    st.sidebar.write(f"🔹 Insights Clicks: {data['insight_clicks']}")
-    st.sidebar.write(f"🔹 Diagnostic Clicks: {data['diagnostic_clicks']}")
-else:
-    st.sidebar.info("No clicks recorded yet.")
-
-# ------------------------
-# Sidebar Admin Password & Data Access
+# Sidebar Admin Access
 # ------------------------
 st.sidebar.title("🔒 Admin Access")
 admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
 if admin_password == os.environ["DATA_PASSWORD"]:
     st.sidebar.success("Access granted ✅")
 
+    # ✅ Fetch Energy Requests from DB (persistent)
     st.sidebar.markdown("### 📂 Previous Energy Requests")
     try:
         df_energy = pd.read_sql("SELECT * FROM energy_requests ORDER BY timestamp DESC", conn)
@@ -265,6 +263,7 @@ if admin_password == os.environ["DATA_PASSWORD"]:
     except Exception as e:
         st.sidebar.error(f"❌ Could not fetch energy requests: {e}")
 
+    # Fetch Diagnostic Entries
     st.sidebar.markdown("### 📂 Previous Diagnostic Entries")
     try:
         df_diag = pd.read_sql("SELECT * FROM service_requests ORDER BY timestamp DESC", conn)
