@@ -113,8 +113,6 @@ with left_col:
         df_temp["distance"] = ((df_temp["Temperature (°C)"] - temp)**2 + (df_temp["Humidity (%)"] - hum)**2) ** 0.5
         return df_temp.loc[df_temp["distance"].idxmin()]
 
-    ENERGY_CSV = "energy_requests.csv"  # CSV file for storing energy requests
-
     with st.container():
         col1, col2 = st.columns([0.5, 0.5])
         with col1:
@@ -135,41 +133,39 @@ with left_col:
                             st.info(f"🔹 {row['Alert 3']}")
                         else:
                             st.warning("No matching condition found in the tips sheet.")
-
-                        # ------------------------
-                        # Save request to CSV including location & alerts
-                        # ------------------------
-                        energy_data = {
-                            "timestamp": pd.Timestamp.now(),
-                            "pincode": pincode,
-                            "location": forecast['place'],
-                            "temperature": forecast['temp_c'],
-                            "humidity": forecast['humidity'],
-                            "Alert 1": row["Alert 1"] if row is not None else "",
-                            "Alert 2": row["Alert 2"] if row is not None else "",
-                            "Alert 3": row["Alert 3"] if row is not None else ""
-                        }
-                        if os.path.exists(ENERGY_CSV):
-                            df_energy = pd.read_csv(ENERGY_CSV)
-                            df_energy = pd.concat([df_energy, pd.DataFrame([energy_data])], ignore_index=True)
-                        else:
-                            df_energy = pd.DataFrame([energy_data])
-                        df_energy.to_csv(ENERGY_CSV, index=False)
-
-                        # Save to DB (optional, if you still want)
+                        # Save request to DB
                         try:
                             cursor.execute(
-                                "INSERT INTO energy_requests (pincode, temperature, humidity, location, alert1, alert2, alert3) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                                (pincode, forecast['temp_c'], forecast['humidity'], forecast['place'],
-                                 row["Alert 1"] if row is not None else None,
-                                 row["Alert 2"] if row is not None else None,
-                                 row["Alert 3"] if row is not None else None)
+                                "INSERT INTO energy_requests (pincode, temperature, humidity) VALUES (%s, %s, %s)",
+                                (pincode, forecast['temp_c'], forecast['humidity'])
                             )
                             conn.commit()
                         except Exception as e:
                             st.error(f"❌ Database Error: {e}")
                     except Exception as e:
                         st.error(f"Error: {e}")
+
+    # --- Password-protected Energy Requests ---
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.markdown("<h4>📂 Previous Energy Requests</h4>", unsafe_allow_html=True)
+    password_input = st.text_input("Enter password to view/download energy requests", type="password", key="energy_pass")
+    if password_input == os.environ["DATA_PASSWORD"]:
+        try:
+            df_energy = pd.read_sql("SELECT * FROM energy_requests ORDER BY timestamp DESC", conn)
+            if not df_energy.empty:
+                st.dataframe(df_energy, use_container_width=True)
+                st.download_button(
+                    label="⬇️ Download All Energy Entries as CSV",
+                    data=df_energy.to_csv(index=False).encode("utf-8"),
+                    file_name="energy_requests.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.info("No energy requests recorded yet.")
+        except Exception as e:
+            st.error(f"❌ Could not fetch energy requests: {e}")
+    elif password_input:
+        st.error("❌ Incorrect password")
 
 # ------------------------
 # Divider
@@ -214,32 +210,12 @@ Issue: {issue}
 Error Code: {display_error or 'Not provided'}
 
 Tasks:
-1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
-2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
- 
+1. Identify the appliance brand and type.
+2. Generate a diagnostic report with sections:
    🔹 Quick Checks / Self-Diagnosis  
-   • Give 2–3 simple user-level checks to perform before calling a technician.
- 
    🔹 Customer Care Number  
-   • Give the official customer care helpline number for the brand.
- 
-   🔹 Probable Causes & Estimated Costs  
-   • Mention 2–3 possible technical causes (just name them, no explanations).  
-   • Add approximate cost range in INR for each cause.  
-   • Present this section **strictly as a clean 2-column table** —  
-     Column 1: “Probable Cause”  
-     Column 2: “Estimated Cost (INR Range)”.  
-   • Do not include markdown symbols like |, *, or #.  
-   • Use simple spacing to make it look like a neat table.
- 
-   🔹 Turnaround Time (TAT)  
-   • Mention the realistic average service time in days.
- 
-Formatting Instructions:
-- Each section heading should start with a blue diamond (🔹).
-- Each point should start with a small black dot (•) except inside the table.
-- Keep response short, well-structured, and visually clean.
-- Avoid unnecessary text or explanations.
+   🔹 Probable Causes & Estimated Costs (table)
+   🔹 Turnaround Time (TAT)
 """
                 try:
                     model = genai.GenerativeModel("gemini-2.5-flash-lite")
@@ -275,72 +251,39 @@ Formatting Instructions:
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
 
-# # ------------------------
-# # Sidebar Click Tracker + Admin Access
-# # ------------------------
-# st.sidebar.title("📊 Click Tracker")
-# if os.path.exists("click_counts.json"):
-#     with open("click_counts.json", "r") as f:
-#         data = json.load(f)
-#     st.sidebar.write(f"🔹 Insights Clicks: {data['insight_clicks']}")
-#     st.sidebar.write(f"🔹 Diagnostic Clicks: {data['diagnostic_clicks']}")
-# else:
-#     st.sidebar.info("No clicks recorded yet.")
+    # --- Password-protected Diagnostic Entries ---
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.markdown("<h4>📂 Previous Diagnostic Entries</h4>", unsafe_allow_html=True)
+    password_input2 = st.text_input("Enter password to view/download diagnostic entries", type="password", key="diag_pass")
+    if password_input2 == os.environ["DATA_PASSWORD"]:
+        try:
+            df_db = pd.read_sql("SELECT * FROM service_requests ORDER BY timestamp DESC", conn)
+            if not df_db.empty:
+                st.dataframe(df_db, use_container_width=True)
+                st.download_button(
+                    label="⬇️ Download All Entries as CSV",
+                    data=df_db.to_csv(index=False).encode("utf-8"),
+                    file_name="service_requests.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.info("No diagnostic entries recorded yet.")
+        except Exception as e:
+            st.error(f"❌ Could not fetch database records: {e}")
+    elif password_input2:
+        st.error("❌ Incorrect password")
 
 # ------------------------
-# Sidebar Admin Password & Data Access
+# Sidebar Click Tracker
 # ------------------------
-st.sidebar.title("🔒 Admin Access")
-admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
-if admin_password == os.environ["DATA_PASSWORD"]:
-    st.sidebar.success("Access granted ✅")
-
-    st.sidebar.markdown("### 📂 Previous Energy Requests")
-    if os.path.exists(ENERGY_CSV):
-        df_energy = pd.read_csv(ENERGY_CSV)
-        st.sidebar.dataframe(df_energy)
-        st.sidebar.download_button(
-            label="⬇️ Download Energy Requests CSV",
-            data=df_energy.to_csv(index=False).encode("utf-8"),
-            file_name="energy_requests.csv",
-            mime="text/csv"
-        )
-    else:
-        st.sidebar.info("No energy requests recorded yet.")
-
-   
-    try:
-        df_ene = pd.read_sql("SELECT * FROM energy_requests ORDER BY timestamp DESC", conn)
-        if not df_ene.empty:
-            st.sidebar.dataframe(df_ene)
-            st.sidebar.download_button(
-                label="⬇️ Download Energy Entries CSV",
-                data=df_ene.to_csv(index=False).encode("utf-8"),
-                file_name="energy_requests.csv",
-                mime="text/csv"
-            )
-        else:
-            st.sidebar.info("No Pincode entries recorded yet.")
-    except Exception as e:
-        st.sidebar.error(f"❌ Could not fetch Pincode entries: {e}")
-        
-    st.sidebar.markdown("### 📂 Previous Diagnostic Entries")    
-    try:
-        df_diag = pd.read_sql("SELECT * FROM service_requests ORDER BY timestamp DESC", conn)
-        if not df_diag.empty:
-            st.sidebar.dataframe(df_diag)
-            st.sidebar.download_button(
-                label="⬇️ Download Diagnostic Entries CSV",
-                data=df_diag.to_csv(index=False).encode("utf-8"),
-                file_name="service_requests.csv",
-                mime="text/csv"
-            )
-        else:
-            st.sidebar.info("No diagnostic entries recorded yet.")
-    except Exception as e:
-        st.sidebar.error(f"❌ Could not fetch diagnostic entries: {e}")
-elif admin_password:
-    st.sidebar.error("❌ Incorrect password")
+st.sidebar.title("📊 Click Tracker")
+if os.path.exists("click_counts.json"):
+    with open("click_counts.json", "r") as f:
+        data = json.load(f)
+    st.sidebar.write(f"🔹 Insights Clicks: {data['insight_clicks']}")
+    st.sidebar.write(f"🔹 Diagnostic Clicks: {data['diagnostic_clicks']}")
+else:
+    st.sidebar.info("No clicks recorded yet.")
 
 # ------------------------
 # Disclaimer
