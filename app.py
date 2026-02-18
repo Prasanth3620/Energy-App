@@ -16,6 +16,33 @@ def get_connection():
 conn = get_connection()
 cursor = conn.cursor()
 
+# ✅ Create tables if they don't exist
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS energy_requests (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    pincode VARCHAR(10),
+    temperature FLOAT,
+    humidity FLOAT,
+    location TEXT,
+    alert1 TEXT,
+    alert2 TEXT,
+    alert3 TEXT
+);
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS service_requests (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    model_name TEXT,
+    error_code TEXT,
+    issue TEXT
+);
+""")
+
+conn.commit()
+
 # ------------------------
 # Streamlit Page Setup
 # ------------------------
