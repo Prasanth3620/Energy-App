@@ -16,32 +16,32 @@ def get_connection():
 conn = get_connection()
 cursor = conn.cursor()
 
-# ✅ Create tables if they don't exist
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS energy_requests (
-    id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    pincode VARCHAR(10),
-    temperature FLOAT,
-    humidity FLOAT,
-    location TEXT,
-    alert1 TEXT,
-    alert2 TEXT,
-    alert3 TEXT
-);
-""")
+# # ✅ Create tables if they don't exist
+# cursor.execute("""
+# CREATE TABLE IF NOT EXISTS energy_requests (
+#     id SERIAL PRIMARY KEY,
+#     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#     pincode VARCHAR(10),
+#     temperature FLOAT,
+#     humidity FLOAT,
+#     location TEXT,
+#     alert1 TEXT,
+#     alert2 TEXT,
+#     alert3 TEXT
+# );
+# """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS service_requests (
-    id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    model_name TEXT,
-    error_code TEXT,
-    issue TEXT
-);
-""")
+# cursor.execute("""
+# CREATE TABLE IF NOT EXISTS service_requests (
+#     id SERIAL PRIMARY KEY,
+#     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#     model_name TEXT,
+#     error_code TEXT,
+#     issue TEXT
+# );
+# """)
 
-conn.commit()
+# conn.commit()
 
 # ------------------------
 # Streamlit Page Setup
@@ -163,27 +163,27 @@ with left_col:
                         else:
                             st.warning("No matching condition found in the tips sheet.")
 
-                        #------------------------
-                        #Save request to CSV including location & alerts
-                        #------------------------
-                        energy_data = {
-                            "timestamp": pd.Timestamp.now(),
-                            "pincode": pincode,
-                            "location": forecast['place'],
-                            "temperature": forecast['temp_c'],
-                            "humidity": forecast['humidity'],
-                            "Alert 1": row["Alert 1"] if row is not None else "",
-                            "Alert 2": row["Alert 2"] if row is not None else "",
-                            "Alert 3": row["Alert 3"] if row is not None else ""
-                        }
-                        if os.path.exists(ENERGY_CSV):
-                            df_energy = pd.read_csv(ENERGY_CSV)
-                            df_energy = pd.concat([df_energy, pd.DataFrame([energy_data])], ignore_index=True)
-                        else:
-                            df_energy = pd.DataFrame([energy_data])
-                        df_energy.to_csv(ENERGY_CSV, index=False)
+                        # #------------------------
+                        # #Save request to CSV including location & alerts
+                        # #------------------------
+                        # energy_data = {
+                        #     "timestamp": pd.Timestamp.now(),
+                        #     "pincode": pincode,
+                        #     "location": forecast['place'],
+                        #     "temperature": forecast['temp_c'],
+                        #     "humidity": forecast['humidity'],
+                        #     "Alert 1": row["Alert 1"] if row is not None else "",
+                        #     "Alert 2": row["Alert 2"] if row is not None else "",
+                        #     "Alert 3": row["Alert 3"] if row is not None else ""
+                        # }
+                        # if os.path.exists(ENERGY_CSV):
+                        #     df_energy = pd.read_csv(ENERGY_CSV)
+                        #     df_energy = pd.concat([df_energy, pd.DataFrame([energy_data])], ignore_index=True)
+                        # else:
+                        #     df_energy = pd.DataFrame([energy_data])
+                        # df_energy.to_csv(ENERGY_CSV, index=False)
 
-                        #Save to DB (optional, if you still want)
+                        # #Save to DB (optional, if you still want)
                         try:
                             cursor.execute(
                                 "INSERT INTO energy_requests (pincode, temperature, humidity, location, alert1, alert2, alert3) VALUES (%s, %s, %s, %s, %s, %s, %s)",
@@ -323,17 +323,17 @@ if admin_password == os.environ["DATA_PASSWORD"]:
     st.sidebar.success("Access granted ✅")
 
     st.sidebar.markdown("### 📂 Previous Energy Requests")
-    if os.path.exists(ENERGY_CSV):
-        df_energy = pd.read_csv(ENERGY_CSV)
-        st.sidebar.dataframe(df_energy)
-        st.sidebar.download_button(
-            label="⬇️ Download Energy Requests CSV",
-            data=df_energy.to_csv(index=False).encode("utf-8"),
-            file_name="energy_requests.csv",
-            mime="text/csv"
-        )
-    else:
-        st.sidebar.info("No energy requests recorded yet.")
+    # if os.path.exists(ENERGY_CSV):
+    #     df_energy = pd.read_csv(ENERGY_CSV)
+    #     st.sidebar.dataframe(df_energy)
+    #     st.sidebar.download_button(
+    #         label="⬇️ Download Energy Requests CSV",
+    #         data=df_energy.to_csv(index=False).encode("utf-8"),
+    #         file_name="energy_requests.csv",
+    #         mime="text/csv"
+    #     )
+    # else:
+    #     st.sidebar.info("No energy requests recorded yet.")
 
    
     try:
