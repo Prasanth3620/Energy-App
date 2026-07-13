@@ -16,7 +16,7 @@ def get_connection():
 conn = get_connection()
 cursor = conn.cursor()
 
-# # ✅ Create tables if they don't exist
+# # To create tables if they don't exist
 # cursor.execute("""
 # CREATE TABLE IF NOT EXISTS energy_requests (
 #     id SERIAL PRIMARY KEY,
@@ -43,17 +43,17 @@ cursor = conn.cursor()
 
 # conn.commit()
 
-# ------------------------
+
 # Streamlit Page Setup
-# ------------------------
+
 st.set_page_config(
     page_title="⚡ Energy Vision",
     layout="wide",
 )
 
-# ------------------------
+
 # Click Tracker
-# ------------------------
+
 def update_click_count(key):
     filename = "click_counts.json"
     if os.path.exists(filename):
@@ -65,9 +65,9 @@ def update_click_count(key):
     with open(filename, "w") as f:
         json.dump(data, f)
 
-# ------------------------
+
 # Custom CSS Styling
-# ------------------------
+
 st.markdown("""
 <style>
     body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(to bottom, #D6E1F0, #C5D4E7); color: #0D1B2A; }
@@ -83,21 +83,21 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ------------------------
+
 # Header
-# ------------------------
+
 st.markdown("<h1 class='main-title'>⚡ Energy Vision</h1>", unsafe_allow_html=True)
 st.markdown("<h3 class='subtitle'>Your Personal Energy & Appliance Consultant</h3>", unsafe_allow_html=True)
 st.markdown("<div class='header-space'></div>", unsafe_allow_html=True)
 
-# ------------------------
+
 # Main Columns
-# ------------------------
+
 left_col, divider_col, right_col = st.columns([1, 0.05, 1])
 
-# ------------------------
+
 # LEFT SIDE → ENERGY INSIGHTS
-# ------------------------
+
 with left_col:
     st.markdown("<h3 class='section-header'>🌞 Today's Energy Saving Tip</h3>", unsafe_allow_html=True)
 
@@ -163,9 +163,9 @@ with left_col:
                         else:
                             st.warning("No matching condition found in the tips sheet.")
 
-                        # #------------------------
+                        
                         # #Save request to CSV including location & alerts
-                        # #------------------------
+                        
                         # energy_data = {
                         #     "timestamp": pd.Timestamp.now(),
                         #     "pincode": pincode,
@@ -183,7 +183,7 @@ with left_col:
                         #     df_energy = pd.DataFrame([energy_data])
                         # df_energy.to_csv(ENERGY_CSV, index=False)
 
-                        # #Save to DB (optional, if you still want)
+                        # #Save to DB (optional, if we still want)
                         try:
                             cursor.execute(
                                 "INSERT INTO energy_requests (pincode, temperature, humidity, location, alert1, alert2, alert3) VALUES (%s, %s, %s, %s, %s, %s, %s)",
@@ -198,15 +198,15 @@ with left_col:
                     except Exception as e:
                         st.error(f"Error: {e}")
 
-# ------------------------
+
 # Divider
-# ------------------------
+
 with divider_col:
     st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
-# ------------------------
+
 # RIGHT SIDE → APPLIANCE DIAGNOSTIC
-# ------------------------
+
 with right_col:
     st.markdown("<h3 class='section-header'>🔧 Appliance Diagnostic Assistant</h3>", unsafe_allow_html=True)
     st.markdown("Describe the issue to get quick troubleshooting guidance.")
@@ -244,13 +244,13 @@ Tasks:
 1. Identify the **appliance brand** (e.g., LG, Samsung, Mi, Whirlpool, etc.) and **type** (e.g., TV, Washing Machine, Refrigerator, AC) from the model number.
 2. Then generate a short, clean, and aesthetic diagnostic report with **four clearly separated sections** as follows:
  
-   🔹 Quick Checks / Self-Diagnosis  
+   i)Quick Checks / Self-Diagnosis  
    • Give 2–3 simple user-level checks to perform before calling a technician.
  
-   🔹 Customer Care Number  
+   ii) Customer Care Number  
    • Give the official customer care helpline number for the brand.
  
-   🔹 Probable Causes & Estimated Costs  
+   iii) Probable Causes & Estimated Costs  
    • Mention 2–3 possible technical causes (just name them, no explanations).  
    • Add approximate cost range in INR for each cause.  
    • Present this section **strictly as a clean 2-column table** —  
@@ -259,7 +259,7 @@ Tasks:
    • Do not include markdown symbols like |, *, or #.  
    • Use simple spacing to make it look like a neat table.
  
-   🔹 Turnaround Time (TAT)  
+   iv) Turnaround Time (TAT)  
    • Mention the realistic average service time in days.
  
 Formatting Instructions:
@@ -369,9 +369,9 @@ if admin_password == os.environ["DATA_PASSWORD"]:
 elif admin_password:
     st.sidebar.error("❌ Incorrect password")
 
-# ------------------------
+
 # Disclaimer
-# ------------------------
+
 st.markdown("---")
 st.markdown(
     "<p style='text-align:center; color: #555555; font-size: 0.9rem;'>⚠️ Disclaimer: The factuality of the responses may not be precise as they are LLM-generated responses. Please share your feedback with us.</p>",
