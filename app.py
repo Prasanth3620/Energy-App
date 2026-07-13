@@ -7,9 +7,9 @@ import json
 import os
 import psycopg2
 
-# ------------------------
+
 # Database connection
-# ------------------------
+
 def get_connection():
     return psycopg2.connect(os.environ["Internal_Database_URL"])
 
@@ -286,21 +286,10 @@ Formatting Instructions:
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
 
-# # ------------------------
-# # Sidebar Click Tracker + Admin Access
-# # ------------------------
-# st.sidebar.title("📊 Click Tracker")
-# if os.path.exists("click_counts.json"):
-#     with open("click_counts.json", "r") as f:
-#         data = json.load(f)
-#     st.sidebar.write(f"🔹 Insights Clicks: {data['insight_clicks']}")
-#     st.sidebar.write(f"🔹 Diagnostic Clicks: {data['diagnostic_clicks']}")
-# else:
-#     st.sidebar.info("No clicks recorded yet.")
 
-# ------------------------
+
 # Sidebar Admin Password & Data Access
-# ------------------------
+
 st.sidebar.title("🔒 Admin Access")
 admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
 if admin_password == os.environ["DATA_PASSWORD"]:
