@@ -52,20 +52,6 @@ st.set_page_config(
 )
 
 
-# Click Tracker
-
-def update_click_count(key):
-    filename = "click_counts.json"
-    if os.path.exists(filename):
-        with open(filename, "r") as f:
-            data = json.load(f)
-    else:
-        data = {"insight_clicks": 0, "diagnostic_clicks": 0}
-    data[key] += 1
-    with open(filename, "w") as f:
-        json.dump(data, f)
-
-
 # Custom CSS Styling
 
 st.markdown("""
@@ -147,7 +133,6 @@ with left_col:
         with col1:
             pincode = st.text_input("Enter your PIN Code", placeholder="e.g. 560001")
             if st.button("🔍 Get Today's Insights", use_container_width=True):
-                update_click_count("insight_clicks")
                 if not pincode:
                     st.error("Please enter a valid PIN code.")
                 else:
@@ -229,7 +214,6 @@ with right_col:
             submitted = st.form_submit_button("🩺 Diagnose", use_container_width=True)
 
     if submitted:
-        update_click_count("diagnostic_clicks")
         if not model_name or not issue:
             st.warning("Please fill in the required fields.")
         else:
