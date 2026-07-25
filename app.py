@@ -202,6 +202,13 @@ with right_col:
     if not api_key:
        st.error("Gemini API key is missing from Render environment variables.")
        st.stop()
+    import hashlib
+
+    st.write("Key loaded:", bool(api_key))
+    st.write("Key length:", len(api_key))
+    st.write(
+    "Key fingerprint:",
+    hashlib.sha256(api_key.encode()).hexdigest()[:12])    
 
     genai.configure(api_key=api_key)
     #updated line is till here
