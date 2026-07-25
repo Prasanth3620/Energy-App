@@ -196,7 +196,16 @@ with right_col:
     st.markdown("<h3 class='section-header'>🔧 Appliance Diagnostic Assistant</h3>", unsafe_allow_html=True)
     st.markdown("Describe the issue to get quick troubleshooting guidance.")
 
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    # genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+
+    if not api_key:
+      st.error("Gemini API key is missing from Render environment variables.")
+      st.stop()
+
+    genai.configure(api_key=api_key)
+    #updated line is till here
+    
 
     with st.form("diagnostic_form"):
         col1, col2 = st.columns([0.5, 0.5])
