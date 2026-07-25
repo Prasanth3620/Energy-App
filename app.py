@@ -13,8 +13,12 @@ import threading
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-nominatim_lock = threading.Lock()
-last_nominatim_request = 0.0
+@st.cache_resource
+def get_nominatim_limiter():
+    return {
+        "lock": threading.Lock(),
+        "last_request": 0.0,
+    }
 
 
 # Database connection
@@ -128,10 +132,10 @@ with left_col:
     #     return {"temp_c": temp, "humidity": humidity, "place": display_name}
     @st.cache_data(ttl=90 * 24 * 60 * 60)
     def geocode_pincode(pincode: str):
-        global last_nominatim_request
+        limiter = get_nominatim_limiter()
 
-        with nominatim_lock:
-            wait_time = 1.1 - (time.monotonic() - last_nominatim_request)
+        with limiter["lock"]:
+            wait_time = 1.1 - (time.monotonic() - limiter["last_request"])
             if wait_time > 0:
                 time.sleep(wait_time)
 
@@ -151,7 +155,7 @@ with left_col:
                 },
                 timeout=20,
             )
-            last_nominatim_request = time.monotonic()
+            limiter["last_request"] = time.monotonic()
 
         if response.status_code == 429:
             raise RuntimeError(
