@@ -144,7 +144,10 @@ with left_col:
                     "limit": 1,
                 },
                 headers={
-                    "User-Agent": "EnergyInsightsApp/1.0 (contact: your-email@example.com)"
+                  "User-Agent": (
+                        "EnergyInsightsApp/1.0 "
+                        "(https://energy-app-ol1i.onrender.com; contact: reddiprasanth1808@gmail.com)"),
+                  "Accept-Language": "en",
                 },
                 timeout=20,
             )
