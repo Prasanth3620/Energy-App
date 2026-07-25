@@ -197,7 +197,7 @@ with right_col:
     st.markdown("Describe the issue to get quick troubleshooting guidance.")
 
     # genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    api_key = os.getenv("AQ.Ab8RN6IfFNzRd3TEl9kY33rwqBxDL5FQimAWqha4SBegYmk5Sw", "").strip()
 
     if not api_key:
       st.error("Gemini API key is missing from Render environment variables.")
