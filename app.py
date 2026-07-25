@@ -8,6 +8,15 @@ import os
 import psycopg2
 
 
+import time
+import threading
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+nominatim_lock = threading.Lock()
+last_nominatim_request = 0.0
+
+
 # Database connection
 
 def get_connection():
@@ -93,31 +102,104 @@ with left_col:
 
     df = load_tips()
 
-    def fetch_weather_from_pincode(pincode: str):
-        geo_url = "https://nominatim.openstreetmap.org/search"
-        g = requests.get(
-            geo_url,
-            params={"postalcode": pincode, "countrycodes": "IN", "format": "json", "limit": 1},
-            headers={"User-Agent": "streamlit-weather-app"},
-            timeout=20
-        )
-        g.raise_for_status()
-        gdata = g.json()
-        if not gdata:
-            raise ValueError(f"No location found for PIN code {pincode}")
-        loc = gdata[0]
-        lat, lon = float(loc["lat"]), float(loc["lon"])
-        display_name = loc.get("display_name", "Unknown Location")
-        wx_url = "https://api.open-meteo.com/v1/forecast"
-        r = requests.get(wx_url, params={"latitude": lat, "longitude": lon, "current_weather": True, "hourly": "temperature_2m,relative_humidity_2m"}, timeout=10)
-        r.raise_for_status()
-        data = r.json()
-        temp = data.get("current_weather", {}).get("temperature")
-        humidity = None
-        if "hourly" in data and "relative_humidity_2m" in data["hourly"]:
-            humidity = data["hourly"]["relative_humidity_2m"][0]
-        return {"temp_c": temp, "humidity": humidity, "place": display_name}
+    # def fetch_weather_from_pincode(pincode: str):
+    #     geo_url = "https://nominatim.openstreetmap.org/search"
+    #     g = requests.get(
+    #         geo_url,
+    #         params={"postalcode": pincode, "countrycodes": "IN", "format": "json", "limit": 1},
+    #         headers={"User-Agent": "streamlit-weather-app"},
+    #         timeout=20
+    #     )
+    #     g.raise_for_status()
+    #     gdata = g.json()
+    #     if not gdata:
+    #         raise ValueError(f"No location found for PIN code {pincode}")
+    #     loc = gdata[0]
+    #     lat, lon = float(loc["lat"]), float(loc["lon"])
+    #     display_name = loc.get("display_name", "Unknown Location")
+    #     wx_url = "https://api.open-meteo.com/v1/forecast"
+    #     r = requests.get(wx_url, params={"latitude": lat, "longitude": lon, "current_weather": True, "hourly": "temperature_2m,relative_humidity_2m"}, timeout=10)
+    #     r.raise_for_status()
+    #     data = r.json()
+    #     temp = data.get("current_weather", {}).get("temperature")
+    #     humidity = None
+    #     if "hourly" in data and "relative_humidity_2m" in data["hourly"]:
+    #         humidity = data["hourly"]["relative_humidity_2m"][0]
+    #     return {"temp_c": temp, "humidity": humidity, "place": display_name}
+    @st.cache_data(ttl=90 * 24 * 60 * 60)
+    def geocode_pincode(pincode: str):
+        global last_nominatim_request
 
+        with nominatim_lock:
+            wait_time = 1.1 - (time.monotonic() - last_nominatim_request)
+            if wait_time > 0:
+                time.sleep(wait_time)
+
+            response = requests.get(
+                "https://nominatim.openstreetmap.org/search",
+                params={
+                    "postalcode": pincode.strip(),
+                    "countrycodes": "IN",
+                    "format": "jsonv2",
+                    "limit": 1,
+                },
+                headers={
+                    "User-Agent": "EnergyInsightsApp/1.0 (contact: your-email@example.com)"
+                },
+                timeout=20,
+            )
+            last_nominatim_request = time.monotonic()
+
+        if response.status_code == 429:
+            raise RuntimeError(
+                "Location lookup is temporarily busy. Please wait one minute and try again."
+            )
+
+        response.raise_for_status()
+        locations = response.json()
+
+        if not locations:
+            raise ValueError(f"No location found for PIN code {pincode}")
+
+        loc = locations[0]
+        return float(loc["lat"]), float(loc["lon"]), loc["display_name"]
+
+
+    @st.cache_data(ttl=15 * 60)
+    def fetch_weather_from_pincode(pincode: str):
+        lat, lon, display_name = geocode_pincode(pincode)
+
+        response = requests.get(
+            "https://api.open-meteo.com/v1/forecast",
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "hourly": "temperature_2m,relative_humidity_2m",
+                "timezone": "auto",
+                "forecast_days": 1,
+            },
+            timeout=10,
+        )
+        response.raise_for_status()
+        data = response.json()
+
+        hourly = data["hourly"]
+        current_hour = datetime.now(
+            ZoneInfo(data["timezone"])
+        ).strftime("%Y-%m-%dT%H:00")
+
+        try:
+            index = hourly["time"].index(current_hour)
+        except ValueError:
+            index = 0
+
+        return {
+            "temp_c": hourly["temperature_2m"][index],
+            "humidity": hourly["relative_humidity_2m"][index],
+            "place": display_name,
+        }
+
+    #updated till here
     def match_prompt(forecast, df):
         temp, hum = forecast["temp_c"], forecast["humidity"]
         if temp is None or hum is None:
@@ -180,8 +262,17 @@ with left_col:
                             conn.commit()
                         except Exception as e:
                             st.error(f"❌ Database Error: {e}")
+                    # except Exception as e:
+                    #     st.error(f"Error: {e}")
+                    except RuntimeError as e:
+                        st.warning(str(e))
+                    except requests.RequestException as e:
+                        st.error("Weather service is unavailable. Please try again shortly.")
+                    except ValueError as e:
+                        st.warning(str(e))
                     except Exception as e:
-                        st.error(f"Error: {e}")
+                        st.error(f"Error: {e}")    
+                    #updated till here    
 
 
 # Divider
