@@ -266,8 +266,11 @@ with left_col:
                     #     st.error(f"Error: {e}")
                     except RuntimeError as e:
                         st.warning(str(e))
+                    except requests.HTTPError as e:
+                        status_code = e.response.status_code if e.response is not None else "unknown"
+                        st.error(f"Weather lookup failed — HTTP {status_code}: {e}")
                     except requests.RequestException as e:
-                        st.error("Weather service is unavailable. Please try again shortly.")
+                        st.error(f"Weather network error: {e}")
                     except ValueError as e:
                         st.warning(str(e))
                     except Exception as e:
